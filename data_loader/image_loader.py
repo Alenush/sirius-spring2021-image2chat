@@ -1,6 +1,19 @@
 import torch
 from PIL import Image
-import parlai.utils.torch as torch_utils
+from .utils import save_tensor
+import os
+
+IMAGE_MODE_SWITCHER = {
+    'resnet152': ['resnet152', -1],
+    'resnet101': ['resnet101', -1],
+    'resnet50': ['resnet50', -1],
+    'resnet34': ['resnet34', -1],
+    'resnet18': ['resnet18', -1],
+    'resnext101_32x8d_wsl': ['resnext101_32x8d_wsl', -1],
+    'resnext101_32x16d_wsl': ['resnext101_32x16d_wsl', -1],
+    'resnext101_32x32d_wsl': ['resnext101_32x32d_wsl', -1],
+    'resnext101_32x48d_wsl': ['resnext101_32x48d_wsl', -1],
+}
 
 class ImageLoader:
     """
@@ -20,8 +33,6 @@ class ImageLoader:
             self._init_resnet_cnn()
         elif 'resnext' in self.image_mode:
             self._init_resnext_cnn()
-        elif 'faster_r_cnn_152_32x8d' in self.image_mode:
-            self._init_faster_r_cnn()
 
     def _init_transform(self):
         # initialize the transform function using torch vision.
@@ -89,7 +100,7 @@ class ImageLoader:
             feature = self.netCNN(transform)
         # save the feature
         if path is not None:
-            torch_utils.atomic_save(feature.cpu(), path)
+            save_tensor(feature.cpu(), path)
         return feature
 
     def _load_image(self, path):
@@ -113,7 +124,7 @@ class ImageLoader:
         prepath, imagefn = self._get_prepath(path)
         dpath = os.path.join(prepath, mode)
         if not os.path.exists(dpath):
-            build_data.make_dir(dpath)
+            os.mkdir(dpath)
         imagefn = imagefn.split('.')[0]
         new_path = os.path.join(prepath, mode, imagefn)
         if not os.path.exists(new_path):

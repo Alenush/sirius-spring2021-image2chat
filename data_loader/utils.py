@@ -1,3 +1,5 @@
+import torch
+
 def filter_bad(data, hashes_set=None):
   # filters bad samples from dataset
   new_data = []
@@ -12,3 +14,7 @@ def filter_bad(data, hashes_set=None):
     if not bad_flag:
       new_data.append(elem)
   return new_data
+
+def save_tensor(state_dict, path):
+  with open(path, "wb") as f:
+    torch.save(state_dict, f)

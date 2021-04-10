@@ -1,11 +1,7 @@
 from collections import defaultdict
-import copy
-import numpy as np
-import os
 import json
 import re
 import nltk
-
 
 RETOK = re.compile(r'\w+|[^\w\s]|\n', re.UNICODE)
 
@@ -14,7 +10,7 @@ class Dictionary():
     def __init__(self, opt):
         self.tokenizer = opt['tokenizer']
         self.filepaths = opt['filepaths']
-        
+
         self.tokenizer_fun = getattr(self, self.tokenizer + '_tokenize')
         if self.tokenizer == 'nltk':
             st_path = 'tokenizers/punkt/{0}.pickle'.format('english')
@@ -25,11 +21,15 @@ class Dictionary():
                 self.sent_tok = nltk.data.load(st_path)
             self.sent_tok = nltk.data.load(st_path)
             self.word_tok = nltk.tokenize.treebank.TreebankWordTokenizer()
-        
+
         self.default_tokens = ['__null__', '__start__', '__end__', '__unk__']
         self._unk_token = '__unk__'
-        
+        self.null_token = '__null__'
+
         self.freq = defaultdict(int)
+        self.min_freq = 0
+        self.max_freq = 1
+
         self.tok2ind = {}
         self.ind2tok = {}
 
@@ -46,7 +46,7 @@ class Dictionary():
                 for elem in data:
                     for sent in elem['dialog']:
                         self._add_sentence(sent[1])
-        
+
     def _add_token(self, word):
         if word not in self.tok2ind:
             index = len(self.tok2ind)
@@ -72,14 +72,14 @@ class Dictionary():
     def remove_tail(self, min_freq):
         to_remove = []
         for token, freq in self.freq.items():
-            if freq < min_freq or freq > max_freq:
+            if freq < min_freq or freq > self.max_freq:
                 to_remove.append(token)
 
         for token in to_remove:
             del self.freq[token]
             idx = self.tok2ind.pop(token)
             del self.ind2tok[idx]
-            
+
     def _word_lookup(self, key):
         return self.tok2ind.get(key, self._unk_token_idx)
 
@@ -90,13 +90,4 @@ class Dictionary():
         return [self.tok2ind.get(token, self._unk_token_idx) for token in self.tokenize(str(text))]
 
     def vec2txt(self, vector, delimiter=' '):
-        return ' '.join([self.ind2tok.get(index, self._unk_token) for index in vector])
-      
-"""
-d = Dictionary({
-    'tokenizer': 'nltk',
-    'filepaths': ['C://Users//daria.vinogradova//ParlAI//data//image_chat//train.json',
-                  'C://Users//daria.vinogradova//ParlAI//data//image_chat//test.json',
-                  'C://Users//daria.vinogradova//ParlAI//data//image_chat//valid.json']
-})
-"""
+        return delimiter.join([self.ind2tok.get(index, self._unk_token) for index in vector])
