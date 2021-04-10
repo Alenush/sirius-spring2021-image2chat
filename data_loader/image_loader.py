@@ -1,5 +1,6 @@
 import torch
 from PIL import Image
+import parlai.utils.torch as torch_utils
 
 class ImageLoader:
     """
@@ -78,7 +79,7 @@ class ImageLoader:
     def _image_mode_switcher(self):
         return IMAGE_MODE_SWITCHER.get(self.image_mode)
 
-    def extract(self, image):
+    def extract(self, image, path=None):
         # check whether initialize CNN network.
         # extract the image feature
         transform = self.transform(image).unsqueeze(0)
@@ -86,6 +87,9 @@ class ImageLoader:
             transform = transform.cuda()
         with torch.no_grad():
             feature = self.netCNN(transform)
+        # save the feature
+        if path is not None:
+            torch_utils.atomic_save(feature.cpu(), path)
         return feature
 
     def _load_image(self, path):
@@ -95,12 +99,25 @@ class ImageLoader:
         with open(path, 'rb') as f:
             return Image.open(f).convert('RGB')
 
+    def _get_prepath(self, path):
+        prepath, imagefn = os.path.split(path)
+        return prepath, imagefn
+        
     def load(self, path):
         """
         Load from a given path.
         """
         mode = self.opt['image_mode']
-        if mode == 'raw':
-            return self._load_image(path)
 
-        return self.extract(self._load_image(path))
+        # otherwise, looks for preprocessed version under 'mode' directory
+        prepath, imagefn = self._get_prepath(path)
+        dpath = os.path.join(prepath, mode)
+        if not os.path.exists(dpath):
+            build_data.make_dir(dpath)
+        imagefn = imagefn.split('.')[0]
+        new_path = os.path.join(prepath, mode, imagefn)
+        if not os.path.exists(new_path):
+            return self.extract(self._load_image(path), new_path)
+        else:
+            with open(new_path, 'rb') as f:
+                return torch.load(f)
