@@ -3,10 +3,14 @@ import os
 import numpy as np
 
 class BatchCreator:
-    # too slow, will be improved  
-
     def __init__(self, bs, train_path, images_path):
         self.batch_size = bs
+        self.img_loader = ImageLoader({
+            'image_mode': 'resnet152',
+            'image_size': 256,
+            'image_cropsize': 224
+        })
+        self.images_path = images_path
         self._extract_text_and_images(train_path, images_path)
         self._setup_data(train_path)
         
@@ -24,12 +28,6 @@ class BatchCreator:
         self.total = ep_idx
         
     def _extract_text_and_images(self, train_path, images_path):
-        img_loader = ImageLoader({
-            'image_mode': 'resnet152',
-            'image_size': 256,
-            'image_cropsize': 224,
-        })
-        
         raw_data = []
         with open(train_path) as f:
             raw_data = json.load(f)
@@ -37,14 +35,11 @@ class BatchCreator:
         self.data = []
         possible_hashes = set(os.listdir(images_path))
         for i, sample in enumerate(raw_data[:50]):
-            print(i)
             if sample['image_hash']+'.jpg' not in possible_hashes:
                 continue
-            sample['image'] = img_loader.load(os.path.join(images_path, sample['image_hash']+'.jpg'))
             self.data.append(sample)
         
     def _get_dialogue(self, episode_idx):
-        print(self.idx_to_ep)
         data = self.data[self.idx_to_ep[episode_idx]]
         turn = self.idx_to_turn[episode_idx]
         
@@ -57,7 +52,7 @@ class BatchCreator:
             full_dialog.append(utt[1])
         return {
             'text': '\n'.join(full_dialog),
-            'image': data['image'],
+            'image': self.img_loader.load(os.path.join(self.images_path, data['image_hash'] + '.jpg')),
             'episode_done': episode_done,
             'labels': [text],
         }
