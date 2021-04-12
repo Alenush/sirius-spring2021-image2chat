@@ -7,6 +7,7 @@ class TransresnetMultimodalModel(nn.Module):
         self.image_features_dim = 2048
         self.embedding_size = 300
         self.dropout = 0.4
+        self.additional_layer_dropout = 0.2
         self.dictionary = dictionary
 
         self._build_image_encoder()
@@ -47,7 +48,7 @@ class TransresnetMultimodalModel(nn.Module):
         )
 
     def _build_label_encoder(self):
-        pass
+        self.additional_layer = LinearWrapper(self.embedding_size, self.hidden_dim, self.additional_layer_dropout)
 
     def forward(self, images_tensor, personality_ohe, dialogue, labels):
         d_indexes, d_mask = dialogue
@@ -57,3 +58,13 @@ class TransresnetMultimodalModel(nn.Module):
         forward_dialogue = self.context_encoder(d_indexes)
         forward_labels = self.label_encoder(l_indexes)
         return forward_dialogue + forward_image + forward_personality, forward_labels
+
+
+class LinearWrapper(nn.Module):
+    def __init__(self, in_dim, out_dim, dropout):
+        super(LinearWrapper, self).__init__()
+        self.lin = nn.Linear(in_dim, out_dim)
+        self.dp = nn.Dropout(dropout)
+
+    def forward(self, input):
+        return self.lin(self.dp(input))
