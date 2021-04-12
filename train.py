@@ -1,13 +1,14 @@
 import argparse
 from data_loader.batch_creator import ImageChatDataset
 from torch.utils.data import DataLoader
+from model import TransresnetMultimodalModel
 import torch
 from torch import optim
 from torch.nn.functional import log_softmax, nll_loss
 
 
 def get_loss(dialogs_encoded, labels_encoded):
-    dot_products = torch.mm(dialogs_encoded, labels_encoded.t())
+    dot_products = torch.bmm(dialogs_encoded, labels_encoded.t())
     log_prob = log_softmax(dot_products, dim=1)
     targets = torch.arange(0, len(dialogs_encoded), dtype=torch.long)
     loss = nll_loss(log_prob, targets)
@@ -30,7 +31,7 @@ if __name__ == '__main__':
     )
     loader = DataLoader(ds, batch_size=args_dict['batchsize'], shuffle=True)
 
-    model = TransResNetModel(...)
+    model = TransresnetMultimodalModel(ds.dictionary)
     optimizer = optim.Adam(filter(lambda p: p.requires_grad, model.parameters()), 0.0001)
 
     for epoch in args_dict['epoch']:
