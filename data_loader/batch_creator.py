@@ -52,7 +52,7 @@ class BatchCreator:
 
         self.data = []
         possible_hashes = set(os.listdir(images_path))
-        for i, sample in enumerate(raw_data[:50]):
+        for i, sample in enumerate(raw_data):
             if sample['image_hash'] + '.jpg' not in possible_hashes:
                 continue
             self.data.append(sample)
@@ -126,8 +126,8 @@ class BatchCreator:
     def form_batch(self):
         idxs = np.random.randint(0, self.total, size=self.batch_size)
         raw_batch = [self._get_dialogue(idx) for idx in idxs]
-        images_tensor = torch.stack([self.img_loader.load(data['image_path'])
-                                     for data in raw_batch])
+        images_tensor = torch.squeeze(torch.stack([self.img_loader.load(data['image_path'])
+                                     for data in raw_batch]))
         indexes, mask = self.sentences_to_tensor([data['text'] for data in raw_batch])
         personalities_ohe = self.personalities_to_tensor([data['personality'] for data in raw_batch])
         return images_tensor, (indexes, mask), personalities_ohe
