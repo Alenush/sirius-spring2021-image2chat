@@ -1,12 +1,14 @@
 import json
 import os
 import numpy as np
-from .image_loader import ImageLoader
-from .dictionary import Dictionary
+import torch
+
+from data_loader.image_loader import ImageLoader
+from data_loader.dictionary import Dictionary
 
 
 class BatchCreator:
-    def __init__(self, bs, train_path, images_path):
+    def __init__(self, bs, train_path, images_path, personalities_path):
         self.use_cuda = False
         self.batch_size = bs
         self.img_loader = ImageLoader({
@@ -15,7 +17,7 @@ class BatchCreator:
             'image_cropsize': 224
         })
         self.images_path = images_path
-        self._extract_text_and_images(train_path, images_path)
+        self._extract_text_and_images(train_path, images_path, personalities_path)
         self._setup_data(train_path)
         self._truncate_len = 32
         self.dictionary = Dictionary({
@@ -38,10 +40,15 @@ class BatchCreator:
 
         self.total = ep_idx
 
-    def _extract_text_and_images(self, train_path, images_path):
+    def _extract_text_and_images(self, train_path, images_path, personalities_path):
         raw_data = []
         with open(train_path) as f:
             raw_data = json.load(f)
+
+        with open(personalities_path) as f:
+            json_pers = json.load(f)
+            personalities = json_pers["positive"] + json_pers["negative"] + json_pers["neutral"]
+            self._build_personality_dictionary(personalities)
 
         self.data = []
         possible_hashes = set(os.listdir(images_path))
@@ -49,6 +56,19 @@ class BatchCreator:
             if sample['image_hash'] + '.jpg' not in possible_hashes:
                 continue
             self.data.append(sample)
+
+    def personalities_to_index(self, personalities):
+        res = []
+        for p in personalities:
+            if p in self.personality_to_id:
+                res.append(self.personality_to_id[p] + 1)
+            else:
+                res.append(0)
+        return res
+
+    def _build_personality_dictionary(self, personalities_list):
+        self.personality_to_id = {p: i for i, p in enumerate(personalities_list)}
+        self.num_personalities = len(personalities_list) + 1
 
     def sentences_to_tensor(self, sentences):
         max_length = self._truncate_len
@@ -73,13 +93,24 @@ class BatchCreator:
             mask = mask.cuda()
         return res, mask
 
+    def personalities_to_tensor(self, personalities):
+        res = torch.FloatTensor(
+            len(personalities), self.num_personalities
+        ).fill_(0)
+        p_to_i = self.personalities_to_index(personalities)
+        for i, index in enumerate(p_to_i):
+            res[i, index] = 1  # no personality corresponds to 0
+        if self.use_cuda:
+            res = res.cuda()
+        return res
+
     def _get_dialogue(self, episode_idx):
         data = self.data[self.idx_to_ep[episode_idx]]
         turn = self.idx_to_turn[episode_idx]
 
         personality, text = data['dialog'][turn]
         episode_done = (turn == len(data['dialog']) - 1)
-        full_dialog = [personality]
+        full_dialog = []
         for i, utt in enumerate(data['dialog']):
             if i >= turn:
                 break
@@ -89,6 +120,7 @@ class BatchCreator:
             'image_path': os.path.join(self.images_path, data['image_hash'] + '.jpg'),
             'episode_done': episode_done,
             'labels': [text],
+            'personality': personality
         }
 
     def form_batch(self):
@@ -97,3 +129,14 @@ class BatchCreator:
         images_tensor = torch.stack([self.img_loader.load(data['image_path'])
                                      for data in raw_batch])
         indexes, mask = self.sentences_to_tensor([data['text'] for data in raw_batch])
+        personalities_ohe = self.personalities_to_tensor([data['personality'] for data in raw_batch])
+        return images_tensor, (indexes, mask), personalities_ohe
+
+if __name__ == '__main__':
+    bc = BatchCreator(
+        32,
+        'C://Users//daria.vinogradova//ParlAI//data//image_chat//train.json',
+        'C://Users//daria.vinogradova//ParlAI//data//yfcc_images',
+        'C://Users//daria.vinogradova//ParlAI//data//personality_captions//personalities.json'
+    )
+    bc.form_batch()
