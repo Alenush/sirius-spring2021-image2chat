@@ -1,8 +1,10 @@
 from torch import nn
 from parlai.agents.transformer.modules import TransformerEncoder
 
+
 class TransresnetMultimodalModel(nn.Module):
-    def init(self, dictionary):
+    def __init__(self, dictionary):
+        super().__init__()
         self.hidden_dim = 500
         self.image_features_dim = 2048
         self.embedding_size = 300
