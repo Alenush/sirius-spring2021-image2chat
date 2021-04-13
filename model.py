@@ -15,6 +15,7 @@ class TransresnetMultimodalModel(nn.Module):
 
         self._build_image_encoder()
         self._build_personality_encoder()
+        self._build_label_encoder()
         self.context_encoder = self._get_context_encoder()
         self.label_encoder = self._get_context_encoder()
 
@@ -37,7 +38,7 @@ class TransresnetMultimodalModel(nn.Module):
     def _get_context_encoder(self):
         embeddings = nn.Embedding(len(self.dictionary), self.embedding_size)
         return TransformerEncoder(
-            embedding_size=self.hidden_dim,
+            embedding_size=self.embedding_size,
             ffn_size=self.hidden_dim * 4,
             n_layers=4,
             n_heads=6,
