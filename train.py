@@ -76,8 +76,9 @@ if __name__ == '__main__':
 
     parser.add_argument('--valid_after_epoch_fraction', default=0.05, type=float)
     parser.add_argument('--loss_after_n_batches', default=20, type=int)
-    parser.add_argument('--save_model_every', type=float, default=0.1, help='save model every fraction of epoch')
+    parser.add_argument('--save_model_every', type=float, default=0.33, help='save model every fraction of epoch')
     parser.add_argument('--save_model_path', default="./model_state_dict")
+    parser.add_argument('--early_stopping', type=int, default=5)
 
     args = parser.parse_args()
 
@@ -148,12 +149,8 @@ if __name__ == '__main__':
                         break
                 print("valid accuracy: ", val_acc)
 
-            k = int(n_batches * args.save_model_every)
-            if i % k == 0 and i != 0:
-                torch.save({
-                    'model_state_dict': model.state_dict(),
-                    'optimizer': optimizer.state_dict()
-                }, args.save_model_path)
+            if i % int(n_batches * args.save_model_every) == 0 and i != 0:
+                save_state(model, optimizer, args.save_model_path)
+        if stopped:
+            break
 
-        print(f'{epoch} epoch passed. Summary:')
-        compute_metrics(valid_loader)
