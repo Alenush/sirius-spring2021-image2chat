@@ -10,7 +10,7 @@ from torch.nn.functional import log_softmax, nll_loss
 def get_loss(dialogs_encoded, labels_encoded):
     dot_products = torch.mm(dialogs_encoded, labels_encoded.t())
     log_prob = log_softmax(dot_products, dim=1)
-    targets = torch.arange(0, len(dialogs_encoded), dtype=torch.long)
+    targets = torch.arange(0, len(dialogs_encoded), dtype=torch.long).cuda()
     loss = nll_loss(log_prob, targets)
     num_correct = (log_prob.max(dim=1)[1] == targets).float().sum()
     return loss, num_correct
