@@ -9,7 +9,7 @@ from data_loader.dictionary import Dictionary
 
 class ImageChatDataset(Dataset):
     def __init__(self, dialogs_path, images_path, personalities_path):
-        self.use_cuda = False
+        self.use_cuda = True
         self.img_loader = ImageLoader({
             'image_mode': 'resnet152',
             'image_size': 256,
