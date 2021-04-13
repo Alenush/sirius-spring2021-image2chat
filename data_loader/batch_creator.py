@@ -115,5 +115,5 @@ class ImageChatDataset(Dataset):
         d_indexes, d_mask = self.sentence_to_tensor(data['dialogue_history'])
         l_indexes, l_mask = self.sentence_to_tensor(data['true_continuation'])
         personality_ohe = self.personality_to_tensor(data['personality'])
-        turn = torch.LongTensor(data['turn'])
+        turn = torch.LongTensor([data['turn']])
         return images_tensor, personality_ohe, (d_indexes, d_mask), (l_indexes, l_mask), turn
