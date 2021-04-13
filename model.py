@@ -10,11 +10,12 @@ class TransresnetMultimodalModel(nn.Module):
         self.embedding_size = 300
         self.dropout = 0.4
         self.dictionary = dictionary
+        self.num_personalities = 216
 
         self._build_image_encoder()
         self._build_personality_encoder()
-        self._build_context_encoder()
-        self._build_label_encoder()
+        self.context_encoder = self._get_context_encoder()
+        self.label_encoder = self._get_context_encoder()
 
     def _build_image_encoder(self):
         image_layers = [
@@ -32,24 +33,19 @@ class TransresnetMultimodalModel(nn.Module):
         ]
         self.personality_encoder = nn.Sequential(*personality_layers)
 
-    def _build_context_encoder(self):
+    def _get_context_encoder(self):
         embeddings = nn.Embedding(len(self.dictionary), self.embedding_size)
-        self.context_encoder = TransformerEncoder(
-            opt={
-                'embedding_size': self.embedding_size,
-                'ffn_size': self.embedding_size * 4,
-                'n_layers': 4,
-                'n_heads': 6
-            },
+        return TransformerEncoder(
+            embedding_size=self.embedding_size,
+            ffn_size=self.embedding_size * 4,
+            n_layers=4,
+            n_heads=6,
             embedding=embeddings,
             vocabulary_size=len(self.dictionary),
             padding_idx=self.dictionary.tok2ind[self.dictionary.null_token],
             embeddings_scale=False,
             output_scaling=1.0,
         )
-
-    def _build_label_encoder(self):
-        pass
 
     def forward(self, images_tensor, personality_ohe, dialogue, labels):
         d_indexes, d_mask = dialogue
