@@ -16,6 +16,11 @@ def get_loss(dialogs_encoded, labels_encoded):
     return loss, num_correct
 
 
+def load_transformers(model, context_encoder_path, label_encoder_path):
+    model.context_encoder.load_state_dict(torch.load(context_encoder_path))
+    model.label_encoder.load_state_dict(torch.load(label_encoder_path))
+
+
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
     parser.add_argument('--epochs', default=10, type=int, help='number of epochs')
@@ -23,7 +28,6 @@ if __name__ == '__main__':
     parser.add_argument('--impath', default='C://Users//daria.vinogradova//ParlAI//data//yfcc_images', type=str)
     parser.add_argument('--textpath', default='C://Users//daria.vinogradova//ParlAI//data//image_chat', type=str)
     parser.add_argument('--perspath', default='C://Users//daria.vinogradova//ParlAI//data//personality_captions//personalities.json', type=str)
-
     args = parser.parse_args()
     args_dict = vars(args)
 
@@ -33,8 +37,11 @@ if __name__ == '__main__':
         args_dict['perspath']
     )
     loader = DataLoader(ds, batch_size=args_dict['batchsize'], shuffle=True)
-
-    model = TransresnetMultimodalModel(ds.dictionary).cuda()
+    model = TransresnetMultimodalModel(ds.dictionary)
+    context_encoder_path = # TODO
+    label_encoder_path =  # TODO
+    load_transformers(model, context_encoder_path, label_encoder_path)
+    model = model.cuda()
     optimizer = optim.Adam(filter(lambda p: p.requires_grad, model.parameters()), 0.0001)
 
     for epoch in range(args_dict['epochs']):
