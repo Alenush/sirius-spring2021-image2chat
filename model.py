@@ -37,8 +37,8 @@ class TransresnetMultimodalModel(nn.Module):
     def _get_context_encoder(self):
         embeddings = nn.Embedding(len(self.dictionary), self.embedding_size)
         return TransformerEncoder(
-            embedding_size=self.embedding_size,
-            ffn_size=self.embedding_size * 4,
+            embedding_size=self.hidden_dim,
+            ffn_size=self.hidden_dim * 4,
             n_layers=4,
             n_heads=6,
             embedding=embeddings,

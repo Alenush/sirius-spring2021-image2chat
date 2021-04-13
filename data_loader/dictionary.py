@@ -39,6 +39,9 @@ class Dictionary():
         self._unk_token_idx = self.tok2ind.get(self._unk_token)
         self._build()
 
+    def __len__(self):
+        return len(self.ind2tok)
+
     def _build(self):
         for path in self.filepaths:
             with open(path) as f:
