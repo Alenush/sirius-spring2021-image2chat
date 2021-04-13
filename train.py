@@ -33,7 +33,7 @@ def compute_metrics(valid_loader):
         total_acc = 0
         turns_acc = [0, 0, 0]
         turns_cnt = [0, 0, 0]
-        
+
         for batch in valid_loader:
             images, personalities, (d_indexes, d_masks), (l_indexes, l_masks), turns = batch
             turns = torch.squeeze(turns)
@@ -120,7 +120,7 @@ if __name__ == '__main__':
 
     train_loader = DataLoader(train_ds, batch_size=args.batchsize, shuffle=True)
     valid_loader = DataLoader(valid_ds, batch_size=args.batchsize, shuffle=True)
-    test_loader = DataLoader(valid_ds, batch_size=args.batchsize, shuffle=True)
+    test_loader = DataLoader(test_ds, batch_size=args.batchsize, shuffle=True)
 
     model = TransresnetMultimodalModel(train_ds.dictionary)
     context_encoder_path = args.context_enc
