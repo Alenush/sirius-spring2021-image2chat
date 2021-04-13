@@ -39,6 +39,7 @@ if __name__ == '__main__':
             optimizer.zero_grad()
             images, personalities, (d_indexes, d_masks), (l_indexes, l_masks) = batch
             samples_encoded, answers_encoded = model(images, personalities, (d_indexes, d_masks), (l_indexes, l_masks))
-            loss = get_loss(samples_encoded, answers_encoded)
+            loss, ok = get_loss(samples_encoded, answers_encoded)
+            print(loss, ok)
             loss.backward()
             optimizer.step()
