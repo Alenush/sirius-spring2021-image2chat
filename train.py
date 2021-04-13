@@ -34,7 +34,7 @@ if __name__ == '__main__':
     model = TransresnetMultimodalModel(ds.dictionary)
     optimizer = optim.Adam(filter(lambda p: p.requires_grad, model.parameters()), 0.0001)
 
-    for epoch in args_dict['epoch']:
+    for epoch in range(args_dict['epochs']):
         for i, batch in enumerate(loader):
             optimizer.zero_grad()
             images, personalities, (d_indexes, d_masks), (l_indexes, l_masks) = batch
