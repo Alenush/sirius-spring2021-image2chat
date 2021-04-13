@@ -23,6 +23,7 @@ def get_loss(dialogs_encoded, labels_encoded):
 def load_transformers(model, context_encoder_path, label_encoder_path):
     model.context_encoder.load_state_dict(torch.load(context_encoder_path))
     model.label_encoder.load_state_dict(torch.load(label_encoder_path))
+    print('Loaded pretrained transformers')
 
 
 def compute_metrics(valid_loader):
@@ -58,7 +59,7 @@ def save_state(model, optimizer, path):
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
     parser.add_argument('--epochs', default=10, type=int, help='number of epochs')
-    parser.add_argument('--batchsize', default=32, type=int, help='batch size')
+    parser.add_argument('--batchsize', default=500, type=int, help='batch size')
     parser.add_argument('--images_path', default='C://Users//daria.vinogradova//ParlAI//data//yfcc_images', type=str)
     parser.add_argument('--dialogues_path', default='C://Users//daria.vinogradova//ParlAI//data//image_chat', type=str)
     parser.add_argument('--dict_path',
@@ -110,7 +111,7 @@ if __name__ == '__main__':
     optimizer = optim.Adam(filter(lambda p: p.requires_grad, model.parameters()), 0.0001)
     n_batches = len(train_loader)
     best_val_acc, no_updates, stopped = -1, 0, False
-    valid_after_n_bathes = args.valid_after_epoch_fraction * n_batches
+    valid_after_n_bathes = int(args.valid_after_epoch_fraction * n_batches)
 
     for epoch in range(args.epochs):
         valid_cnt = 0
