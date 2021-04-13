@@ -31,8 +31,12 @@ def compute_metrics(valid_loader):
         model.eval()
         cnt = 0
         total_acc = 0
+        turns_acc = [0, 0, 0]
+        turns_cnt = [0, 0, 0]
+        
         for batch in valid_loader:
-            images, personalities, (d_indexes, d_masks), (l_indexes, l_masks) = batch
+            images, personalities, (d_indexes, d_masks), (l_indexes, l_masks), turns = batch
+            turns = torch.squeeze(turns)
             if use_cuda:
                 images = images.cuda()
                 personalities = personalities.cuda()
@@ -40,13 +44,23 @@ def compute_metrics(valid_loader):
                 d_masks = d_masks.cuda()
                 l_indexes = l_indexes.cuda()
                 l_masks = l_masks.cuda()
+                turns = turns.cuda()
 
-            samples_encoded, answers_encoded = model(images, personalities, (d_indexes, d_masks), (l_indexes, l_masks))
-            _, n_correct = get_loss(samples_encoded, answers_encoded)
-            total_acc += n_correct / images.shape[0]
-            cnt += 1
+            for turn in range(3):
+                mask = (turns == turn)
+                samples_encoded, answers_encoded = model(images[mask], personalities[mask],
+                                                         (d_indexes[mask], d_masks[mask]),
+                                                         (l_indexes[mask], l_masks[mask]))
+                _, n_correct = get_loss(samples_encoded, answers_encoded)
+                total_acc += n_correct
+                turns_acc[turn] += n_correct
+                turns_cnt[turn] += torch.sum(mask)
+                cnt += 1
 
-        return total_acc / cnt
+        for turn in range(3):
+            print(f'{turn} turn acc: {turns_acc[turn] / turns_cnt[turn]}')
+
+        return total_acc / len(valid_loader)
 
 
 def save_state(model, optimizer, path):
@@ -125,7 +139,7 @@ if __name__ == '__main__':
         valid_cnt = 0
         for i, batch in enumerate(train_loader):
             optimizer.zero_grad()
-            images, personalities, (d_indexes, d_masks), (l_indexes, l_masks) = batch
+            images, personalities, (d_indexes, d_masks), (l_indexes, l_masks), _ = batch
 
             if use_cuda:
                 images = images.cuda()
