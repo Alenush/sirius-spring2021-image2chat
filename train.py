@@ -66,7 +66,7 @@ if __name__ == '__main__':
     parser.add_argument('--context_enc',
                         default='', #C://Users//daria.vinogradova//ParlAI//data//image_chat//context_encoder.pt
                         type=str)
-    parser.add_argument('--save_model_every', type=float, default=0.1, help='save model every fraction of epoch')
+    parser.add_argument('--save_model_every', type=float, default=0.33, help='save model every fraction of epoch')
     parser.add_argument('--save_model_path', default="./model_state_dict")
 
     args = parser.parse_args()
@@ -119,7 +119,7 @@ if __name__ == '__main__':
             if i % 100 == 0 and i > 0:
                 val_acc = compute_metrics(valid_loader)
                 print("valid accuracy: ", val_acc)
-            if i % n_batches * args.save_model_every == 0 and i != 0:
+            if i % int(n_batches * args.save_model_every) == 0 and i != 0:
                 torch.save({
                     'model_state_dict': model.state_dict(),
                     'optimizer': optimizer.state_dict()
