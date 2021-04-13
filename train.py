@@ -61,10 +61,10 @@ if __name__ == '__main__':
                         default='C://Users//daria.vinogradova//ParlAI//data//personality_captions//personalities.json',
                         type=str)
     parser.add_argument('--label_enc',
-                        default='C://Users//daria.vinogradova//ParlAI//data//image_chat//label_encoder.pt',
+                        default='', #C://Users//daria.vinogradova//ParlAI//data//image_chat//label_encoder.pt
                         type=str)
     parser.add_argument('--context_enc',
-                        default='C://Users//daria.vinogradova//ParlAI//data//image_chat//context_encoder.pt',
+                        default='', #C://Users//daria.vinogradova//ParlAI//data//image_chat//context_encoder.pt
                         type=str)
 
     args = parser.parse_args()
@@ -90,7 +90,8 @@ if __name__ == '__main__':
     model = TransresnetMultimodalModel(train_ds.dictionary)
     context_encoder_path = args_dict['context_enc']
     label_encoder_path = args_dict['label_enc']
-    #load_transformers(model, context_encoder_path, label_encoder_path)
+    if context_encoder_path != '' and label_encoder_path != '':
+        load_transformers(model, context_encoder_path, label_encoder_path)
     if use_cuda:
         model = model.cuda()
     optimizer = optim.Adam(filter(lambda p: p.requires_grad, model.parameters()), 0.0001)
