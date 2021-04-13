@@ -22,7 +22,6 @@ class ImageLoader:
 
     def __init__(self, opt):
         self.opt = opt.copy()
-        self.use_cuda = True
         self.netCNN = None
         self.image_mode = opt['image_mode']
         self.image_size = opt['image_size']
