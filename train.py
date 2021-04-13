@@ -48,6 +48,13 @@ def compute_metrics(valid_loader):
         return total_acc / cnt
 
 
+def save_state(model, optimizer, path):
+    torch.save({
+        'model_state_dict': model.state_dict(),
+        'optimizer': optimizer.state_dict()
+    }, path)
+
+
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
     parser.add_argument('--epochs', default=10, type=int, help='number of epochs')
@@ -68,6 +75,7 @@ if __name__ == '__main__':
                         type=str)
     parser.add_argument('--save_model_every', type=float, default=0.33, help='save model every fraction of epoch')
     parser.add_argument('--save_model_path', default="./model_state_dict")
+    parser.add_argument('--early_stopping', type=int, default=5)
 
     args = parser.parse_args()
 
@@ -97,6 +105,7 @@ if __name__ == '__main__':
         model = model.cuda()
     optimizer = optim.Adam(filter(lambda p: p.requires_grad, model.parameters()), 0.0001)
     n_batches = len(train_loader)
+    best_val_acc, no_updates, stopped = -1, 0, False
     for epoch in range(args.epochs):
         for i, batch in enumerate(train_loader):
             optimizer.zero_grad()
@@ -118,9 +127,19 @@ if __name__ == '__main__':
                 print(loss, ok)
             if i % 100 == 0 and i > 0:
                 val_acc = compute_metrics(valid_loader)
+                if val_acc > best_val_acc:
+                    best_val_acc = val_acc
+                    no_updates = 0
+                else:
+                    no_updates += 1
+                    if no_updates == args.early_stopping:
+                        print(f"No updates of accuracy for {no_updates} steps, stopping training")
+                        save_state(model, optimizer, args.save_model_path)
+                        stopped = True
+                        break
                 print("valid accuracy: ", val_acc)
+
             if i % int(n_batches * args.save_model_every) == 0 and i != 0:
-                torch.save({
-                    'model_state_dict': model.state_dict(),
-                    'optimizer': optimizer.state_dict()
-                }, args.save_model_path)
+                save_state(model, optimizer, args.save_model_path)
+        if stopped:
+            break
