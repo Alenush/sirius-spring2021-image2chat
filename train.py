@@ -68,35 +68,34 @@ if __name__ == '__main__':
                         type=str)
 
     args = parser.parse_args()
-    args_dict = vars(args)
 
     train_ds = ImageChatDataset(
-        args_dict['dialogues_path'],
-        args_dict['images_path'],
-        args_dict['personalities_path'],
-        args_dict['dict_path']
+        args.dialogues_path,
+        args.images_path,
+        args.personalities_path,
+        args.dict_path
     )
     valid_ds = ImageChatDataset(
-        args_dict['dialogues_path'],
-        args_dict['images_path'],
-        args_dict['personalities_path'],
-        args_dict['dict_path'],
+        args.dialogues_path,
+        args.images_path,
+        args.personalities_path,
+        args.dict_path,
         'valid.json'
     )
 
-    train_loader = DataLoader(train_ds, batch_size=args_dict['batchsize'], shuffle=True)
-    valid_loader = DataLoader(valid_ds, batch_size=args_dict['batchsize'], shuffle=True)
+    train_loader = DataLoader(train_ds, batch_size=args.batchsize, shuffle=True)
+    valid_loader = DataLoader(valid_ds, batch_size=args.batchsize, shuffle=True)
 
     model = TransresnetMultimodalModel(train_ds.dictionary)
-    context_encoder_path = args_dict['context_enc']
-    label_encoder_path = args_dict['label_enc']
+    context_encoder_path = args.context_enc
+    label_encoder_path = args.label_enc
     if context_encoder_path != '' and label_encoder_path != '':
         load_transformers(model, context_encoder_path, label_encoder_path)
     if use_cuda:
         model = model.cuda()
     optimizer = optim.Adam(filter(lambda p: p.requires_grad, model.parameters()), 0.0001)
 
-    for epoch in range(args_dict['epochs']):
+    for epoch in range(args.epochs):
         for i, batch in enumerate(train_loader):
             optimizer.zero_grad()
             images, personalities, (d_indexes, d_masks), (l_indexes, l_masks) = batch
