@@ -7,41 +7,32 @@ from tqdm import tqdm
 RETOK = re.compile(r'\w+|[^\w\s]|\n', re.UNICODE)
 
 
+def unescape(s):
+    return s.replace('\\n', '\n').replace('\\t', '\t').replace('\\r', '\r')
+
+
 class Dictionary():
-    def __init__(self, opt):
-        self.tokenizer = opt['tokenizer']
-        self.filepaths = opt['filepaths']
-
-        self.tokenizer_fun = getattr(self, self.tokenizer + '_tokenize')
-        if self.tokenizer == 'nltk':
-            st_path = 'tokenizers/punkt/{0}.pickle'.format('english')
-            try:
-                self.sent_tok = nltk.data.load(st_path)
-            except LookupError:
-                nltk.download('punkt')
-                self.sent_tok = nltk.data.load(st_path)
-            self.sent_tok = nltk.data.load(st_path)
-            self.word_tok = nltk.tokenize.treebank.TreebankWordTokenizer()
-
-        self.default_tokens = ['__null__', '__start__', '__end__', '__unk__']
-        self._unk_token = '__unk__'
-        self.null_token = '__null__'
-
-        self.freq = defaultdict(int)
-        self.min_freq = 0
-        self.max_freq = 1
-
-        self.tok2ind = {}
+    def __init__(self, dict_path):
         self.ind2tok = {}
-
-        for default_token in self.default_tokens:
-            self._add_token(default_token)
-
-        self._unk_token_idx = self.tok2ind.get(self._unk_token)
-        self._build()
+        self.tok2ind = {}
+        self.freq = {}
+        self.tokenizer_fun = self.re_tokenize
+        self.load(dict_path)
 
     def __len__(self):
         return len(self.ind2tok)
+
+    def load(self, filename):
+        self.null_token = '<PAD>'
+        self._unk_token = '<UNK>'
+        with open(filename, 'r', encoding='utf-8', errors='ignore') as read:
+            for line in read:
+                split = line.strip().split('\t')
+                token = unescape(split[0])
+                cnt = int(split[1]) if len(split) > 1 else 0
+                self.freq[token] = cnt
+                self._add_token(token)
+        self._unk_token_idx = self.tok2ind[self._unk_token]
 
     def _build(self):
         for path in self.filepaths:

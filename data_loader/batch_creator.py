@@ -8,7 +8,7 @@ from data_loader.dictionary import Dictionary
 
 
 class ImageChatDataset(Dataset):
-    def __init__(self, dialogs_path, images_path, personalities_path):
+    def __init__(self, dialogs_path, images_path, personalities_path, dict_path, prefix='train.json'):
         self.use_cuda = torch.cuda.is_available()
         self.img_loader = ImageLoader({
             'image_mode': 'resnet152',
@@ -16,15 +16,10 @@ class ImageChatDataset(Dataset):
             'image_cropsize': 224
         })
         self.images_path = images_path
-        self._extract_text_and_images(os.path.join(dialogs_path, 'train.json'), images_path, personalities_path)
+        self._extract_text_and_images(os.path.join(dialogs_path, prefix), images_path, personalities_path)
         self._setup_data()
         self._truncate_len = 32
-        self.dictionary = Dictionary({
-            'tokenizer': 'nltk',
-            'filepaths': [os.path.join(dialogs_path, 'train.json'),
-                          os.path.join(dialogs_path, 'test.json'),
-                          os.path.join(dialogs_path, 'valid.json')]
-        })
+        self.dictionary = Dictionary(dict_path)
 
     def _build_personality_dictionary(self, personalities_list):
         self.personality_to_id = {p: i for i, p in enumerate(personalities_list)}
@@ -120,15 +115,3 @@ class ImageChatDataset(Dataset):
         l_indexes, l_mask = self.sentence_to_tensor(data['true_continuation'])
         personality_ohe = self.personality_to_tensor(data['personality'])
         return images_tensor, personality_ohe, (d_indexes, d_mask), (l_indexes, l_mask)
-
-
-if __name__ == '__main__':
-    ds = ImageChatDataset(
-        'C://Users//daria.vinogradova//ParlAI//data//image_chat',
-        'C://Users//daria.vinogradova//ParlAI//data//yfcc_images',
-        'C://Users//daria.vinogradova//ParlAI//data//personality_captions//personalities.json'
-    )
-
-    dataloader = DataLoader(ds, batch_size=4, shuffle=True)
-    for i_batch, sample_batched in enumerate(dataloader):
-        print(i_batch)
