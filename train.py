@@ -20,14 +20,17 @@ if __name__ == '__main__':
     parser = argparse.ArgumentParser()
     parser.add_argument('--epochs', default=10, type=int, help='number of epochs')
     parser.add_argument('--batchsize', default=32, type=int, help='batch size')
+    parser.add_argument('--impath', default='C://Users//daria.vinogradova//ParlAI//data//yfcc_images', type=str)
+    parser.add_argument('--textpath', default='C://Users//daria.vinogradova//ParlAI//data//image_chat', type=str)
+    parser.add_argument('--perspath', default='C://Users//daria.vinogradova//ParlAI//data//personality_captions//personalities.json', type=str)
 
     args = parser.parse_args()
     args_dict = vars(args)
 
     ds = ImageChatDataset(
-        'C://Users//daria.vinogradova//ParlAI//data//image_chat',
-        'C://Users//daria.vinogradova//ParlAI//data//yfcc_images',
-        'C://Users//daria.vinogradova//ParlAI//data//personality_captions//personalities.json'
+        args_dict['textpath'],
+        args_dict['impath'],
+        args_dict['perspath']
     )
     loader = DataLoader(ds, batch_size=args_dict['batchsize'], shuffle=True)
 
