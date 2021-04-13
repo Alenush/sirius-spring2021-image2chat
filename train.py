@@ -66,6 +66,8 @@ if __name__ == '__main__':
     parser.add_argument('--context_enc',
                         default='', #C://Users//daria.vinogradova//ParlAI//data//image_chat//context_encoder.pt
                         type=str)
+    parser.add_argument('--valid_after_epoch_fraction', default=0.05, type=float)
+    parser.add_argument('--loss_after_n_batches', default=20, type=int)
 
     args = parser.parse_args()
 
@@ -95,7 +97,10 @@ if __name__ == '__main__':
         model = model.cuda()
     optimizer = optim.Adam(filter(lambda p: p.requires_grad, model.parameters()), 0.0001)
 
+    valid_after_n_bathes = args.valid_after_epoch_fraction * len(train_ds)
+
     for epoch in range(args.epochs):
+        valid_cnt = 0
         for i, batch in enumerate(train_loader):
             optimizer.zero_grad()
             images, personalities, (d_indexes, d_masks), (l_indexes, l_masks) = batch
@@ -110,10 +115,14 @@ if __name__ == '__main__':
 
             samples_encoded, answers_encoded = model(images, personalities, (d_indexes, d_masks), (l_indexes, l_masks))
             loss, ok = get_loss(samples_encoded, answers_encoded)
-            if i % 10 == 0:
+
+            if i % args.loss_after_n_batches:
                 print(loss, ok)
-            if i % 100 == 0 and i > 0:
+
+            if i % valid_after_n_bathes == 0 and i > 0:
                 compute_metrics(valid_loader)
 
             loss.backward()
             optimizer.step()
+        print(f'{epoch} epoch passed. Summary:')
+        compute_metrics(valid_loader)
