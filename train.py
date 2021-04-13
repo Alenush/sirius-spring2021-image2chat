@@ -45,7 +45,14 @@ def compute_metrics(valid_loader):
             total_acc += n_correct / images.shape[0]
             cnt += 1
 
-        print('valid accuracy: ', total_acc / cnt)
+        return total_acc / cnt
+
+
+def save_state(model, optimizer, path):
+    torch.save({
+        'model_state_dict': model.state_dict(),
+        'optimizer': optimizer.state_dict()
+    }, path)
 
 
 if __name__ == '__main__':
@@ -66,8 +73,11 @@ if __name__ == '__main__':
     parser.add_argument('--context_enc',
                         default='', #C://Users//daria.vinogradova//ParlAI//data//image_chat//context_encoder.pt
                         type=str)
+
     parser.add_argument('--valid_after_epoch_fraction', default=0.05, type=float)
     parser.add_argument('--loss_after_n_batches', default=20, type=int)
+    parser.add_argument('--save_model_every', type=float, default=0.1, help='save model every fraction of epoch')
+    parser.add_argument('--save_model_path', default="./model_state_dict")
 
     args = parser.parse_args()
 
@@ -95,9 +105,11 @@ if __name__ == '__main__':
         load_transformers(model, context_encoder_path, label_encoder_path)
     if use_cuda:
         model = model.cuda()
-    optimizer = optim.Adam(filter(lambda p: p.requires_grad, model.parameters()), 0.0001)
 
-    valid_after_n_bathes = args.valid_after_epoch_fraction * len(train_ds)
+    optimizer = optim.Adam(filter(lambda p: p.requires_grad, model.parameters()), 0.0001)
+    n_batches = len(train_loader)
+    best_val_acc, no_updates, stopped = -1, 0, False
+    valid_after_n_bathes = args.valid_after_epoch_fraction * n_batches
 
     for epoch in range(args.epochs):
         valid_cnt = 0
@@ -116,13 +128,32 @@ if __name__ == '__main__':
             samples_encoded, answers_encoded = model(images, personalities, (d_indexes, d_masks), (l_indexes, l_masks))
             loss, ok = get_loss(samples_encoded, answers_encoded)
 
+            loss.backward()
+            optimizer.step()
+
             if i % args.loss_after_n_batches:
                 print(loss, ok)
 
             if i % valid_after_n_bathes == 0 and i > 0:
-                compute_metrics(valid_loader)
+                val_acc = compute_metrics(valid_loader)
+                if val_acc > best_val_acc:
+                    best_val_acc = val_acc
+                    no_updates = 0
+                else:
+                    no_updates += 1
+                    if no_updates == args.early_stopping:
+                        print(f"No updates of accuracy for {no_updates} steps, stopping training")
+                        save_state(model, optimizer, args.save_model_path)
+                        stopped = True
+                        break
+                print("valid accuracy: ", val_acc)
 
-            loss.backward()
-            optimizer.step()
+            k = int(n_batches * args.save_model_every)
+            if i % k == 0 and i != 0:
+                torch.save({
+                    'model_state_dict': model.state_dict(),
+                    'optimizer': optimizer.state_dict()
+                }, args.save_model_path)
+
         print(f'{epoch} epoch passed. Summary:')
         compute_metrics(valid_loader)
