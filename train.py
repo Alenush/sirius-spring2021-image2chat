@@ -19,15 +19,15 @@ def get_loss(dialogs_encoded, labels_encoded):
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
     parser.add_argument('--epochs', default=10, type=int, help='number of epochs')
-    parser.add_argument('--batchsize', default=32, type=int, help='batch size')
+    parser.add_argument('--batchsize', default=1, type=int, help='batch size')
 
     args = parser.parse_args()
     args_dict = vars(args)
 
     ds = ImageChatDataset(
-        'C://Users//daria.vinogradova//ParlAI//data//image_chat',
-        'C://Users//daria.vinogradova//ParlAI//data//yfcc_images',
-        'C://Users//daria.vinogradova//ParlAI//data//personality_captions//personalities.json'
+        '/home/andreybocharnikov/ParlAI/data/image_chat',
+        '/home/andreybocharnikov/ParlAI/data/yfcc_images',
+        '/home/andreybocharnikov/ParlAI/data/personality_captions/personalities.json'
     )
     loader = DataLoader(ds, batch_size=args_dict['batchsize'], shuffle=True)
 
