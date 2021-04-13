@@ -133,7 +133,7 @@ if __name__ == '__main__':
             optimizer.step()
 
             if i % args.loss_after_n_batches:
-                print(loss, ok)
+                print(f'{loss.item()} loss, {ok.item()} right samples from {args.batchsize}')
 
             if i % valid_after_n_bathes == 0 and i > 0:
                 val_acc = compute_metrics(valid_loader)
