@@ -49,7 +49,7 @@ if __name__ == '__main__':
     model = TransresnetMultimodalModel(ds.dictionary)
     context_encoder_path = args_dict['context_enc']
     label_encoder_path = args_dict['label_enc']
-    #load_transformers(model, context_encoder_path, label_encoder_path)
+    load_transformers(model, context_encoder_path, label_encoder_path)
     model = model.cuda()
     optimizer = optim.Adam(filter(lambda p: p.requires_grad, model.parameters()), 0.0001)
 

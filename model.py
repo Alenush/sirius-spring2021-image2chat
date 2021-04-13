@@ -1,5 +1,6 @@
 from torch import nn
 from parlai.agents.transformer.modules import TransformerEncoder
+from parlai.core.opt import Opt
 
 
 class TransresnetMultimodalModel(nn.Module):
@@ -38,10 +39,12 @@ class TransresnetMultimodalModel(nn.Module):
     def _get_context_encoder(self):
         embeddings = nn.Embedding(len(self.dictionary), self.embedding_size)
         return TransformerEncoder(
-            embedding_size=self.embedding_size,
-            ffn_size=self.hidden_dim * 4,
-            n_layers=4,
-            n_heads=6,
+            opt = Opt({"embedding_size": self.embedding_size,
+            "ffn_size": self.embedding_size * 4,
+            "n_layers": 4,
+            "n_heads": 6,
+            }),
+            n_positions=1000,
             embedding=embeddings,
             vocabulary_size=len(self.dictionary),
             padding_idx=self.dictionary.tok2ind[self.dictionary.null_token],
