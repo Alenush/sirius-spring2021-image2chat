@@ -39,17 +39,16 @@ class TransresnetMultimodalModel(nn.Module):
     def _get_context_encoder(self):
         embeddings = nn.Embedding(len(self.dictionary), self.embedding_size)
         return TransformerEncoder(
-            opt = Opt({"embedding_size": self.embedding_size,
-            "ffn_size": self.embedding_size * 4,
-            "n_layers": 4,
-            "n_heads": 6,
-            }),
-            n_positions=1000,
+            embedding_size=self.embedding_size,
+            ffn_size=self.embedding_size * 4,
+            n_layers=4,
+            n_heads=6,
             embedding=embeddings,
             vocabulary_size=len(self.dictionary),
             padding_idx=self.dictionary.tok2ind[self.dictionary.null_token],
             embeddings_scale=False,
             output_scaling=1.0,
+            n_positions=1000
         )
 
     def _build_label_encoder(self):
