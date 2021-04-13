@@ -56,8 +56,8 @@ class TransresnetMultimodalModel(nn.Module):
         l_indexes, l_mask = labels
         forward_image = self.image_encoder(images_tensor)
         forward_personality = self.personality_encoder(personality_ohe)
-        forward_dialogue = self.context_encoder(d_indexes)
-        forward_labels = self.label_encoder(l_indexes)
+        forward_dialogue = self.additional_layer(self.context_encoder(d_indexes))
+        forward_labels = self.additional_layer(self.label_encoder(l_indexes))
         return forward_dialogue + forward_image + forward_personality, forward_labels
 
 
