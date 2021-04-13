@@ -52,15 +52,14 @@ def compute_metrics(valid_loader):
                                                          (d_indexes[mask], d_masks[mask]),
                                                          (l_indexes[mask], l_masks[mask]))
                 _, n_correct = get_loss(samples_encoded, answers_encoded)
-                total_acc += n_correct
                 turns_acc[turn] += n_correct
                 turns_cnt[turn] += torch.sum(mask)
                 cnt += 1
 
         for turn in range(3):
-            print(f'{turn} turn acc: {turns_acc[turn] / turns_cnt[turn]}')
+            print(f'{turn+1} turn acc: {turns_acc[turn] / turns_cnt[turn]}')
 
-        return total_acc / len(valid_loader)
+        return (turns_acc[0] + turns_acc[1] + turns_acc[2]) / (turns_cnt[0] + turns_cnt[1] + turns_cnt[2])
 
 
 def save_state(model, optimizer, path):
