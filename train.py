@@ -112,7 +112,7 @@ if __name__ == '__main__':
             loss, ok = get_loss(samples_encoded, answers_encoded)
             if i % 10 == 0:
                 print(loss, ok)
-            if i % 100 == 0:
+            if i % 100 == 0 and i > 0:
                 compute_metrics(valid_loader)
 
             loss.backward()
