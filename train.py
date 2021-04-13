@@ -148,7 +148,7 @@ if __name__ == '__main__':
                         save_state(model, optimizer, args.save_model_path)
                         stopped = True
                         break
-                print("valid accuracy: ", val_acc)
+                print("valid accuracy: ", val_acc.item())
 
             if i % int(n_batches * args.save_model_every) == 0 and i != 0:
                 save_state(model, optimizer, args.save_model_path)
