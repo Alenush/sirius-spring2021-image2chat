@@ -96,9 +96,17 @@ if __name__ == '__main__':
         args.dict_path,
         'valid.json'
     )
+    test_ds = ImageChatDataset(
+        args.dialogues_path,
+        args.images_path,
+        args.personalities_path,
+        args.dict_path,
+        'test.json'
+    )
 
     train_loader = DataLoader(train_ds, batch_size=args.batchsize, shuffle=True)
     valid_loader = DataLoader(valid_ds, batch_size=args.batchsize, shuffle=True)
+    test_loader = DataLoader(valid_ds, batch_size=args.batchsize, shuffle=True)
 
     model = TransresnetMultimodalModel(train_ds.dictionary)
     context_encoder_path = args.context_enc
@@ -108,7 +116,7 @@ if __name__ == '__main__':
     if use_cuda:
         model = model.cuda()
 
-    optimizer = optim.Adam(filter(lambda p: p.requires_grad, model.parameters()), 0.0001)
+    optimizer = optim.Adam(filter(lambda p: p.requires_grad, model.parameters()), 0.0005)
     n_batches = len(train_loader)
     best_val_acc, no_updates, stopped = -1, 0, False
     valid_after_n_bathes = int(args.valid_after_epoch_fraction * n_batches)
@@ -154,4 +162,6 @@ if __name__ == '__main__':
                 save_state(model, optimizer, args.save_model_path)
         if stopped:
             break
+
+    print(f'test acc: {compute_metrics(test_loader).item()}')
 
