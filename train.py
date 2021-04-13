@@ -26,7 +26,10 @@ if __name__ == '__main__':
     parser.add_argument('--epochs', default=10, type=int, help='number of epochs')
     parser.add_argument('--batchsize', default=32, type=int, help='batch size')
     parser.add_argument('--images_path', default='C://Users//daria.vinogradova//ParlAI//data//yfcc_images', type=str)
-    parser.add_argument('--textpath', default='C://Users//daria.vinogradova//ParlAI//data//image_chat', type=str)
+    parser.add_argument('--dialogues_path', default='C://Users//daria.vinogradova//ParlAI//data//image_chat', type=str)
+    parser.add_argument('--dict_path',
+                        default='C://Users//daria.vinogradova//ParlAI//data//models//image_chat//transresnet_multimodal//model.dict',
+                        type=str)
     parser.add_argument('--personalities_path',
                         default='C://Users//daria.vinogradova//ParlAI//data//personality_captions//personalities.json',
                         type=str)
@@ -41,9 +44,10 @@ if __name__ == '__main__':
     args_dict = vars(args)
 
     ds = ImageChatDataset(
-        args_dict['textpath'],
+        args_dict['dialogues_path'],
         args_dict['images_path'],
-        args_dict['personalities_path']
+        args_dict['personalities_path'],
+        args_dict['dict_path']
     )
     loader = DataLoader(ds, batch_size=args_dict['batchsize'], shuffle=True)
     model = TransresnetMultimodalModel(ds.dictionary)
