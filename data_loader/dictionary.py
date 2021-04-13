@@ -2,6 +2,7 @@ from collections import defaultdict
 import json
 import re
 import nltk
+from tqdm import tqdm
 
 RETOK = re.compile(r'\w+|[^\w\s]|\n', re.UNICODE)
 
@@ -44,9 +45,11 @@ class Dictionary():
 
     def _build(self):
         for path in self.filepaths:
+            print(f"Update dictionary with {path}")
             with open(path) as f:
                 data = json.load(f)
-                for elem in data:
+                for i in tqdm(range(len(data))):
+                    elem = data[i]
                     for sent in elem['dialog']:
                         self._add_sentence(sent[1])
 

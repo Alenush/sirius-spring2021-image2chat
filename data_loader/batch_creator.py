@@ -1,6 +1,7 @@
 import json
 import os
 import torch
+from tqdm import tqdm
 from torch.utils.data import Dataset, DataLoader
 from data_loader.image_loader import ImageLoader
 from data_loader.dictionary import Dictionary
@@ -8,7 +9,7 @@ from data_loader.dictionary import Dictionary
 
 class ImageChatDataset(Dataset):
     def __init__(self, dialogs_path, images_path, personalities_path):
-        self.use_cuda = False
+        self.use_cuda = True
         self.img_loader = ImageLoader({
             'image_mode': 'resnet152',
             'image_size': 256,
@@ -54,7 +55,9 @@ class ImageChatDataset(Dataset):
 
         self.data = []
         possible_hashes = set(os.listdir(images_path))
-        for i, sample in enumerate(raw_data[:10]):
+        print("loading data: ")
+        for i in tqdm(range(len(raw_data))):
+            sample = raw_data[i]
             if sample['image_hash'] + '.jpg' not in possible_hashes:
                 continue
             self.data.append(sample)
