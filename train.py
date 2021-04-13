@@ -45,7 +45,7 @@ def compute_metrics(valid_loader):
             total_acc += n_correct / images.shape[0]
             cnt += 1
 
-        print('valid accuracy: ', total_acc / cnt)
+        return total_acc / cnt
 
 
 if __name__ == '__main__':
@@ -66,6 +66,8 @@ if __name__ == '__main__':
     parser.add_argument('--context_enc',
                         default='', #C://Users//daria.vinogradova//ParlAI//data//image_chat//context_encoder.pt
                         type=str)
+    parser.add_argument('--save_model_every', type=float, default=0.1, help='save model every fraction of epoch')
+    parser.add_argument('--save_model_path', default="./model_state_dict")
 
     args = parser.parse_args()
 
@@ -94,7 +96,7 @@ if __name__ == '__main__':
     if use_cuda:
         model = model.cuda()
     optimizer = optim.Adam(filter(lambda p: p.requires_grad, model.parameters()), 0.0001)
-
+    n_batches = len(train_loader)
     for epoch in range(args.epochs):
         for i, batch in enumerate(train_loader):
             optimizer.zero_grad()
@@ -110,10 +112,15 @@ if __name__ == '__main__':
 
             samples_encoded, answers_encoded = model(images, personalities, (d_indexes, d_masks), (l_indexes, l_masks))
             loss, ok = get_loss(samples_encoded, answers_encoded)
+            loss.backward()
+            optimizer.step()
             if i % 10 == 0:
                 print(loss, ok)
             if i % 100 == 0 and i > 0:
-                compute_metrics(valid_loader)
-
-            loss.backward()
-            optimizer.step()
+                val_acc = compute_metrics(valid_loader)
+                print("valid accuracy: ", val_acc)
+            if i % n_batches * args.save_model_every == 0 and i != 0:
+                torch.save({
+                    'model_state_dict': model.state_dict(),
+                    'optimizer': optimizer.state_dict()
+                }, args.save_model_path)
