@@ -7,6 +7,8 @@ from torch.nn.functional import log_softmax
 from model import TransresnetMultimodalModel
 from data_loader.batch_creator import ImageChatDataset
 
+use_cuda = torch.cuda.is_available()
+
 
 def rank_candidates(dialogue_encoded, labels_encoded, labels_str, true_label):
     with torch.no_grad():
@@ -46,7 +48,7 @@ if __name__ == '__main__':
 
     model = TransresnetMultimodalModel(test_ds.dictionary)
     model.load_state_dict(torch.load(args.model_path,
-                                     map_location=torch.device('cpu'))['model_state_dict'])
+                                     map_location=torch.device('cpu') if not use_cuda else None)['model_state_dict'])
     model.eval()
 
     top1 = {100: 0, 1000: 0}
@@ -65,6 +67,14 @@ if __name__ == '__main__':
 
                 d_indexes, d_masks = test_ds.sentences_to_tensor(dialogue_history)
                 l_indexes, l_masks = test_ds.sentences_to_tensor(labels)
+
+                if use_cuda:
+                    image = image.cuda()
+                    personality = personality.cuda()
+                    d_indexes = d_indexes.cuda()
+                    d_masks = d_masks.cuda()
+                    l_indexes = l_indexes.cuda()
+                    l_masks = l_masks.cude()
 
                 samples_encoded, answers_encoded = model(image, personality, (d_indexes, d_masks),
                                                          (l_indexes, l_masks))
