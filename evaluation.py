@@ -13,8 +13,11 @@ def rank_candidates(dialogue_encoded, labels_encoded, labels_str, true_label):
         log_prob = log_softmax(dot_products, dim=1)
         order = torch.argsort(log_prob, descending=True)
         ranked = np.array(labels_str)[order]
-        print(ranked[0][:5,:])
-        print(labels_str[true_label])
+        top1 = labels_str[true_label][0] in ranked[0][0][0]
+        top5 = labels_str[true_label][0] in ranked[0][:5][0]
+        top10 = labels_str[true_label][0] in ranked[0][:10][0]
+        #print(labels_str[true_label][0])
+    return top1, top5, top10
 
 
 if __name__ == '__main__':
@@ -42,12 +45,19 @@ if __name__ == '__main__':
                                      map_location=torch.device('cpu'))['model_state_dict'])
     model.eval()
 
+    top1 = {100: 0, 1000: 0}
+    top5 = {100: 0, 1000: 0}
+    top10 = {100: 0, 1000: 0}
+    cnt = 0
+
     with open('C://Users//daria.vinogradova//ParlAI//data//image_chat//test.json') as f:
         test_loader = DataLoader(test_ds, batch_size=1, shuffle=True)
         for i, batch in enumerate(test_loader):
+            if i % 500 == 0:
+                print(i)
             image, personality, dialogue_history, true_continuation, turn, candidates = batch
-            for num_cands in ['100', '1000']:
-                labels = candidates[turn][num_cands]
+            for num_cands in [100, 1000]:
+                labels = candidates[turn][str(num_cands)]
                 true_id = labels.index(true_continuation)
 
                 d_indexes, d_masks = test_ds.sentences_to_tensor(dialogue_history)
@@ -55,5 +65,12 @@ if __name__ == '__main__':
 
                 samples_encoded, answers_encoded = model(image, personality, (d_indexes, d_masks),
                                                          (l_indexes, l_masks))
-                rank_candidates(samples_encoded, answers_encoded, labels, true_id)
-                break
+                _top1, _top5, _top10 = rank_candidates(samples_encoded, answers_encoded, labels, true_id)
+                top1[num_cands] += _top1
+                top5[num_cands] += _top5
+                top10[num_cands] += _top10
+            cnt += 1
+
+    print(f'top1 acc: {top1[100] / cnt} for 100, {top1[1000] / cnt} for 1000')
+    print(f'top5 acc: {top5[100] / cnt} for 100, {top5[1000] / cnt} for 1000')
+    print(f'top10 acc: {top10[100] / cnt} for 100, {top10[1000] / cnt} for 1000')
