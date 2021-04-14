@@ -50,7 +50,9 @@ def compute_metrics(valid_loader):
         turns_cnt = [0, 0, 0]
 
         for batch in valid_loader:
-            images, personalities, (d_indexes, d_masks), (l_indexes, l_masks), turns = batch
+            images, personalities, dialogues, labels, turns = batch
+            d_indexes, d_masks = train_ds.sentences_to_tensor(dialogues)
+            l_indexes, l_masks = train_ds.sentences_to_tensor(labels)
             turns = torch.squeeze(turns)
             if use_cuda:
                 images = images.cuda()
@@ -81,11 +83,11 @@ def compute_metrics(valid_loader):
             print(f'{turn + 1} turn acc5: {turns_acc5[turn] / turns_cnt[turn]}')
         for turn in range(3):
             print(f'{turn + 1} turn acc5: {turns_acc10[turn] / turns_cnt[turn]}')
+
         mean_acc1 = (turns_acc1[0] + turns_acc1[1] + turns_acc1[2]) / (turns_cnt[0] + turns_cnt[1] + turns_cnt[2])
         mean_acc5 = (turns_acc5[0] + turns_acc5[1] + turns_acc5[2]) / (turns_cnt[0] + turns_cnt[1] + turns_cnt[2])
         mean_acc10 = (turns_acc10[0] + turns_acc10[1] + turns_acc10[2]) / (turns_cnt[0] + turns_cnt[1] + turns_cnt[2])
         return mean_acc1, mean_acc5, mean_acc10
-
 
 def save_state(model, optimizer, path):
     torch.save({
@@ -164,7 +166,10 @@ if __name__ == '__main__':
         valid_cnt = 0
         for i, batch in enumerate(train_loader):
             optimizer.zero_grad()
-            images, personalities, (d_indexes, d_masks), (l_indexes, l_masks), _ = batch
+
+            images, personalities, dialogues, labels, _ = batch
+            d_indexes, d_masks = train_ds.sentences_to_tensor(dialogues)
+            l_indexes, l_masks = train_ds.sentences_to_tensor(labels)
 
             if use_cuda:
                 images = images.cuda()
