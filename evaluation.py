@@ -49,6 +49,7 @@ if __name__ == '__main__':
     model = TransresnetMultimodalModel(test_ds.dictionary)
     model.load_state_dict(torch.load(args.model_path,
                                      map_location=torch.device('cpu') if not use_cuda else None)['model_state_dict'])
+    model = model.cuda()
     model.eval()
 
     top1 = {100: 0, 1000: 0}
