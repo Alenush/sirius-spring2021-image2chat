@@ -16,9 +16,11 @@ def rank_candidates(dialogue_encoded, labels_encoded, labels_str, true_label):
         log_prob = log_softmax(dot_products, dim=1)
         order = torch.argsort(log_prob, descending=True)
         ranked = np.array(labels_str)[order.cpu().numpy()]
-        top1 = labels_str[true_label][0] in ranked[0][0][0]
-        top5 = labels_str[true_label][0] in ranked[0][:5][0]
-        top10 = labels_str[true_label][0] in ranked[0][:10][0]
+        ranked = np.squeeze(ranked)
+        chosen = labels_str[true_label][0]
+        top1 = chosen == ranked[0]
+        top5 = chosen in ranked[:5]
+        top10 = chosen in ranked[:10]
         #print(labels_str[true_label][0])
     return top1, top5, top10
 
@@ -49,7 +51,8 @@ if __name__ == '__main__':
     model = TransresnetMultimodalModel(test_ds.dictionary)
     model.load_state_dict(torch.load(args.model_path,
                                      map_location=torch.device('cpu') if not use_cuda else None)['model_state_dict'])
-    model = model.cuda()
+    if use_cuda:
+        model = model.cuda()
     model.eval()
 
     top1 = {100: 0, 1000: 0}
@@ -60,7 +63,8 @@ if __name__ == '__main__':
     with open(os.path.join(args.dialogues_path, 'test.json')) as f:
         test_loader = DataLoader(test_ds, batch_size=1, shuffle=True)
         for i, batch in enumerate(test_loader):
-            print(i)
+            if i % 100 == 0:
+                print(i)
             image, personality, dialogue_history, true_continuation, turn, candidates = batch
             for num_cands in [100, 1000]:
                 labels = candidates[turn][str(num_cands)]
