@@ -65,7 +65,7 @@ def compute_metrics(valid_loader):
                                                          (l_indexes[mask], l_masks[mask]))
 
                 #_, n_correct = get_loss(samples_encoded, answers_encoded)
-                acc1, acc5 = compute_metrics_onesample(samples_encoded, answers_encoded, k)
+                acc1, acc5 = compute_metrics_onesample(samples_encoded, answers_encoded, 5)
                 turns_acc1[turn] += acc1
                 turns_acc5[turn] += acc5
                 turns_cnt[turn] += torch.sum(mask)
