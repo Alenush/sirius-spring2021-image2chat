@@ -11,7 +11,7 @@ class ImageChatDataset(Dataset):
     def __init__(self, dialogs_path, images_path, personalities_path, dict_path, prefix='train.json'):
         self.use_cuda = torch.cuda.is_available()
         self.img_loader = ImageLoader({
-            'image_mode': 'resnext101_32x48d_wsl',
+            'image_mode': 'resnet152',
             'image_size': 256,
             'image_cropsize': 224
         })
