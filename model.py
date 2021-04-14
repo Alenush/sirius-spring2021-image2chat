@@ -9,7 +9,7 @@ class TransresnetMultimodalModel(nn.Module):
         self.hidden_dim = 500
         self.image_features_dim = 2048
         self.embedding_size = 300
-        self.dropout = 0.4
+        self.dropout = 0.2
         self.additional_layer_dropout = 0.2
         self.dictionary = dictionary
         self.num_personalities = 216
