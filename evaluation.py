@@ -15,7 +15,7 @@ def rank_candidates(dialogue_encoded, labels_encoded, labels_str, true_label):
         dot_products = torch.mm(dialogue_encoded, labels_encoded.t())
         log_prob = log_softmax(dot_products, dim=1)
         order = torch.argsort(log_prob, descending=True)
-        ranked = np.array(labels_str)[order]
+        ranked = np.array(labels_str)[order.cpu().numpy()]
         top1 = labels_str[true_label][0] in ranked[0][0][0]
         top5 = labels_str[true_label][0] in ranked[0][:5][0]
         top10 = labels_str[true_label][0] in ranked[0][:10][0]
