@@ -1,5 +1,6 @@
 import torch
 import argparse
+import os
 import numpy as np
 from torch.utils.data import DataLoader
 from torch.nn.functional import log_softmax
@@ -30,6 +31,9 @@ if __name__ == '__main__':
     parser.add_argument('--personalities_path',
                         default='C://Users//daria.vinogradova//ParlAI//data//personality_captions//personalities.json',
                         type=str)
+    parser.add_argument('--model_path',
+                        default='C://Users//daria.vinogradova//ParlAI//data//models//image_chat//model_resnext_1',
+                        type=str)
 
     args = parser.parse_args()
     test_ds = ImageChatDataset(
@@ -41,7 +45,7 @@ if __name__ == '__main__':
     )
 
     model = TransresnetMultimodalModel(test_ds.dictionary)
-    model.load_state_dict(torch.load('C://Users//daria.vinogradova//ParlAI//data//models//image_chat//model_resnext_1',
+    model.load_state_dict(torch.load(args.model_path,
                                      map_location=torch.device('cpu'))['model_state_dict'])
     model.eval()
 
@@ -50,11 +54,10 @@ if __name__ == '__main__':
     top10 = {100: 0, 1000: 0}
     cnt = 0
 
-    with open('C://Users//daria.vinogradova//ParlAI//data//image_chat//test.json') as f:
+    with open(os.path.join(args.dialogues_path, 'test.json')) as f:
         test_loader = DataLoader(test_ds, batch_size=1, shuffle=True)
         for i, batch in enumerate(test_loader):
-            if i % 500 == 0:
-                print(i)
+            print(i)
             image, personality, dialogue_history, true_continuation, turn, candidates = batch
             for num_cands in [100, 1000]:
                 labels = candidates[turn][str(num_cands)]
