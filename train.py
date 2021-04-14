@@ -9,6 +9,7 @@ from torch.nn.functional import log_softmax, nll_loss
 
 use_cuda = torch.cuda.is_available()
 
+
 def get_loss(dialogs_encoded, labels_encoded):
     dot_products = torch.mm(dialogs_encoded, labels_encoded.t())
     log_prob = log_softmax(dot_products, dim=1)
@@ -26,12 +27,23 @@ def load_transformers(model, context_encoder_path, label_encoder_path):
     print('Loaded pretrained transformers')
 
 
+def compute_metrics_onesample(dialogs_encoded, labels_encoded, k=5):
+    dot_products = torch.mm(dialogs_encoded, labels_encoded.t())
+    values, ids = torch.topk(dot_products, k=k, dim=1)
+    targets = torch.arange(0, len(dialogs_encoded), dtype=torch.long)
+    if use_cuda:
+        targets = targets.cuda()
+    top1 = (ids[:, 0] == targets).int().sum()
+    topk = (ids == targets[:, None]).int().sum(dim=1)
+    return top1, topk
+
+
 def compute_metrics(valid_loader):
     with torch.no_grad():
         model.eval()
         cnt = 0
-        total_acc = 0
-        turns_acc = [0, 0, 0]
+        turns_acc1 = [0, 0, 0]
+        turns_acc5 = [0, 0, 0]
         turns_cnt = [0, 0, 0]
 
         for batch in valid_loader:
@@ -51,15 +63,21 @@ def compute_metrics(valid_loader):
                 samples_encoded, answers_encoded = model(images[mask], personalities[mask],
                                                          (d_indexes[mask], d_masks[mask]),
                                                          (l_indexes[mask], l_masks[mask]))
-                _, n_correct = get_loss(samples_encoded, answers_encoded)
-                turns_acc[turn] += n_correct
+
+                #_, n_correct = get_loss(samples_encoded, answers_encoded)
+                acc1, acc5 = compute_metrics_onesample(samples_encoded, answers_encoded, k)
+                turns_acc1[turn] += acc1
+                turns_acc5[turn] += acc5
                 turns_cnt[turn] += torch.sum(mask)
                 cnt += 1
 
         for turn in range(3):
-            print(f'{turn+1} turn acc: {turns_acc[turn] / turns_cnt[turn]}')
-
-        return (turns_acc[0] + turns_acc[1] + turns_acc[2]) / (turns_cnt[0] + turns_cnt[1] + turns_cnt[2])
+            print(f'{turn+1} turn acc1: {turns_acc1[turn] / turns_cnt[turn]}')
+        for turn in range(3):
+            print(f'{turn + 1} turn acc5: {turns_acc5[turn] / turns_cnt[turn]}')
+        mean_acc1 = (turns_acc1[0] + turns_acc1[1] + turns_acc1[2]) / (turns_cnt[0] + turns_cnt[1] + turns_cnt[2])
+        mean_acc5 = (turns_acc5[0] + turns_acc5[1] + turns_acc5[2]) / (turns_cnt[0] + turns_cnt[1] + turns_cnt[2])
+        return mean_acc1, mean_acc5
 
 
 def save_state(model, optimizer, path):
@@ -159,9 +177,9 @@ if __name__ == '__main__':
                 print(f'{loss.item()} loss, {ok.item()} right samples from {args.batchsize}')
 
             if i % valid_after_n_bathes == 0 and i > 0:
-                val_acc = compute_metrics(valid_loader)
-                if val_acc > best_val_acc:
-                    best_val_acc = val_acc
+                val_acc1, val_acc5 = compute_metrics(valid_loader)
+                if val_acc1 > best_val_acc:
+                    best_val_acc = val_acc1
                     no_updates = 0
                 else:
                     no_updates += 1
@@ -170,7 +188,8 @@ if __name__ == '__main__':
                         save_state(model, optimizer, args.save_model_path)
                         stopped = True
                         break
-                print("valid accuracy: ", val_acc.item())
+                print("valid accuracy1: ", val_acc1.item())
+                print("valid accuracy5: ", val_acc5.item())
 
             if i % int(n_batches * args.save_model_every) == 0 and i != 0:
                 save_state(model, optimizer, args.save_model_path)
