@@ -75,10 +75,12 @@ def compute_metrics(valid_loader):
                 turns_cnt[turn] += torch.sum(mask)
                 cnt += 1
 
-        #for turn in range(3):
-        #    print(f'{turn+1} turn acc1: {turns_acc1[turn] / turns_cnt[turn]}')
-        #for turn in range(3):
-        #    print(f'{turn + 1} turn acc5: {turns_acc5[turn] / turns_cnt[turn]}')
+        for turn in range(3):
+            print(f'{turn+1} turn acc1: {turns_acc1[turn] / turns_cnt[turn]}')
+        for turn in range(3):
+            print(f'{turn + 1} turn acc5: {turns_acc5[turn] / turns_cnt[turn]}')
+        for turn in range(3):
+            print(f'{turn + 1} turn acc5: {turns_acc10[turn] / turns_cnt[turn]}')
         mean_acc1 = (turns_acc1[0] + turns_acc1[1] + turns_acc1[2]) / (turns_cnt[0] + turns_cnt[1] + turns_cnt[2])
         mean_acc5 = (turns_acc5[0] + turns_acc5[1] + turns_acc5[2]) / (turns_cnt[0] + turns_cnt[1] + turns_cnt[2])
         mean_acc10 = (turns_acc10[0] + turns_acc10[1] + turns_acc10[2]) / (turns_cnt[0] + turns_cnt[1] + turns_cnt[2])
