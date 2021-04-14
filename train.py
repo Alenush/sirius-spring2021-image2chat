@@ -135,6 +135,7 @@ if __name__ == '__main__':
     valid_after_n_bathes = int(args.valid_after_epoch_fraction * n_batches)
 
     for epoch in range(args.epochs):
+        model.train()
         valid_cnt = 0
         for i, batch in enumerate(train_loader):
             optimizer.zero_grad()
