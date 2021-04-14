@@ -25,9 +25,6 @@ class TransresnetMultimodalModel(nn.Module):
             nn.BatchNorm1d(self.image_features_dim),
             nn.Dropout(p=self.dropout),
             nn.Linear(self.image_features_dim, self.hidden_dim),
-            nn.ReLU(),
-            nn.Dropout(p=self.dropout),
-            nn.Linear(self.hidden_dim, self.hidden_dim)
         ]
         self.image_encoder = nn.Sequential(*image_layers)
 
