@@ -3,7 +3,6 @@ from data_loader.batch_creator import ImageChatDataset
 from torch.utils.data import DataLoader
 from model import TransresnetMultimodalModel
 import torch
-import os
 from torch import optim
 from torch.nn.functional import log_softmax, nll_loss
 
@@ -50,7 +49,7 @@ def compute_metrics(valid_loader):
         turns_cnt = [0, 0, 0]
 
         for batch in valid_loader:
-            images, personalities, dialogues, labels, turns = batch
+            images, personalities, dialogues, labels, turns, _ = batch
             d_indexes, d_masks = train_ds.sentences_to_tensor(dialogues)
             l_indexes, l_masks = train_ds.sentences_to_tensor(labels)
             turns = torch.squeeze(turns)
@@ -167,7 +166,7 @@ if __name__ == '__main__':
         for i, batch in enumerate(train_loader):
             optimizer.zero_grad()
 
-            images, personalities, dialogues, labels, _ = batch
+            images, personalities, dialogues, labels, _, _ = batch
             d_indexes, d_masks = train_ds.sentences_to_tensor(dialogues)
             l_indexes, l_masks = train_ds.sentences_to_tensor(labels)
 

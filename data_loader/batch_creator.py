@@ -11,7 +11,7 @@ class ImageChatDataset(Dataset):
     def __init__(self, dialogs_path, images_path, personalities_path, dict_path, prefix='train.json'):
         self.use_cuda = torch.cuda.is_available()
         self.img_loader = ImageLoader({
-            'image_mode': 'resnet152',
+            'image_mode': 'resnext101_32x48d_wsl',
             'image_size': 256,
             'image_cropsize': 224
         })
@@ -59,9 +59,13 @@ class ImageChatDataset(Dataset):
 
     def _get_dialogue(self, episode_idx):
         data = self.data[self.idx_to_ep[episode_idx]]
+        if 'candidates' in data:
+            cands = data['candidates']
+        else:
+            cands = {}
         turn = self.idx_to_turn[episode_idx]
         personality, text = data['dialog'][turn]
-        full_dialog = [personality]
+        full_dialog = []
         for i, utt in enumerate(data['dialog']):
             if i >= turn:
                 break
@@ -71,7 +75,8 @@ class ImageChatDataset(Dataset):
             'image_path': os.path.join(self.images_path, data['image_hash'] + '.jpg'),
             'true_continuation': text,
             'personality': personality,
-            'turn': turn
+            'turn': turn,
+            'candidates': cands
         }
 
     def personality_to_index(self, personality):
@@ -121,4 +126,4 @@ class ImageChatDataset(Dataset):
         images_tensor = torch.squeeze(self.img_loader.load(data['image_path']))
         personality_ohe = self.personality_to_tensor(data['personality'])
         turn = torch.LongTensor([data['turn']])
-        return images_tensor, personality_ohe, data['dialogue_history'], data['true_continuation'], turn
+        return images_tensor, personality_ohe, data['dialogue_history'], data['true_continuation'], turn, data['candidates']
