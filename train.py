@@ -34,7 +34,7 @@ def compute_metrics_onesample(dialogs_encoded, labels_encoded, k=5):
     if use_cuda:
         targets = targets.cuda()
     top1 = (ids[:, 0] == targets).int().sum()
-    topk = (ids == targets[:, None]).int().sum(dim=1)
+    topk = (ids == targets[:, None]).int().sum()
     return top1, topk
 
 
