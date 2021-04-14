@@ -74,7 +74,7 @@ if __name__ == '__main__':
                     d_indexes = d_indexes.cuda()
                     d_masks = d_masks.cuda()
                     l_indexes = l_indexes.cuda()
-                    l_masks = l_masks.cude()
+                    l_masks = l_masks.cuda()
 
                 samples_encoded, answers_encoded = model(image, personality, (d_indexes, d_masks),
                                                          (l_indexes, l_masks))
