@@ -61,7 +61,7 @@ class ImageChatDataset(Dataset):
         data = self.data[self.idx_to_ep[episode_idx]]
         turn = self.idx_to_turn[episode_idx]
         personality, text = data['dialog'][turn]
-        full_dialog = []
+        full_dialog = [personality]
         for i, utt in enumerate(data['dialog']):
             if i >= turn:
                 break
