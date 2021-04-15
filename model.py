@@ -82,7 +82,7 @@ class LinearWrapper(nn.Module):
 class EfficentNetBackbone(nn.Module):
     def __init__(self):
         super().__init__()
-        self.model = EfficientNet.from_pretrained('efficientnet-b0')
+        self.model = EfficientNet.from_pretrained('efficientnet-b7')
         self.pool = nn.AdaptiveAvgPool2d((1, 1))
 
     def forward(self, X):
