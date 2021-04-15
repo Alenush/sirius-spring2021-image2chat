@@ -79,6 +79,9 @@ if __name__ == '__main__':
     top1 = {100: 0, 1000: 0}
     top5 = {100: 0, 1000: 0}
     top10 = {100: 0, 1000: 0}
+    top1_turn = {100: [0, 0, 0], 1000: [0, 0, 0]}
+    top5_turn = {100: [0, 0, 0], 1000: [0, 0, 0]}
+    top10_turn = {100: [0, 0, 0], 1000: [0, 0, 0]}
     cnt = 0
 
     with open(os.path.join(args.dialogues_path, 'test.json')) as f:
@@ -95,8 +98,17 @@ if __name__ == '__main__':
                 top1[num_cands] += _top1
                 top5[num_cands] += _top5
                 top10[num_cands] += _top10
+                top1_turn[num_cands][turn] += _top1
+                top5_turn[num_cands][turn] += _top5
+                top10_turn[num_cands][turn] += _top10
             cnt += 1
 
     print(f'top1 acc: {top1[100] / cnt} for 100, {top1[1000] / cnt} for 1000')
     print(f'top5 acc: {top5[100] / cnt} for 100, {top5[1000] / cnt} for 1000')
     print(f'top10 acc: {top10[100] / cnt} for 100, {top10[1000] / cnt} for 1000')
+
+    for turn in range(3):
+        print(f'turn {turn}:')
+        print(f'top1 acc: {top1_turn[100][turn] / cnt} for 100, {top1_turn[1000][turn] / cnt} for 1000')
+        print(f'top5 acc: {top5_turn[100][turn] / cnt} for 100, {top5_turn[1000][turn] / cnt} for 1000')
+        print(f'top10 acc: {top10_turn[100][turn] / cnt} for 100, {top10_turn[1000][turn] / cnt} for 1000')
