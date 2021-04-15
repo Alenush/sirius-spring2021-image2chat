@@ -4,8 +4,8 @@ from evaluation import apply_model, rank_output_candidates, create_model_and_dat
 
 
 def process_data(ds, model, image_path, personality, dialogue_history, candidates_list):
-    image_tensor = torch.squeeze(ds.img_loader.load(image_path))
-    personality_ohe = ds.personality_to_tensor(personality)
+    image_tensor = torch.unsqueeze(torch.squeeze(ds.img_loader.load(image_path)), dim=0)
+    personality_ohe = torch.unsqueeze(ds.personality_to_tensor(personality), dim=0)
     samples_encoded, answers_encoded = apply_model(ds, model, image_tensor, personality_ohe, dialogue_history, candidates_list)
     top_answer = rank_output_candidates(samples_encoded, answers_encoded, candidates_list, None)
     return top_answer
@@ -17,7 +17,7 @@ def parse_candidates(path):
         for line in f:
             if len(line) > 1:
                 cands.append(line[:-1])
-    return cands
+    return cands[:100000]
 
 
 if __name__ == '__main__':
