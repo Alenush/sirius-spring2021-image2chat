@@ -86,7 +86,7 @@ class ImageLoader:
         self.netCNN = torch.nn.Sequential(*list(CNN(pretrained=True).children())[:layer_num])
 
         if self.use_cuda:
-            self.netCNN.cuda()
+            self.netCNN = self.netCNN.cuda()
 
     def _init_resnext_cnn(self):
         """
@@ -100,7 +100,7 @@ class ImageLoader:
         self.netCNN = torch.nn.Sequential(*list(model.children())[:layer_num])
 
         if self.use_cuda:
-            self.netCNN.cuda()
+            self.netCNN = self.netCNN.cuda()
 
     def _init_efficientnet(self):
         self.netCNN = EfficentNetBackbone()
