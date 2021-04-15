@@ -8,7 +8,7 @@ class TransresnetMultimodalModel(nn.Module):
     def __init__(self, dictionary, backbone_type=None):
         super().__init__()
         self.hidden_dim = 500
-        self.image_features_dim = 1280 if backbone_type == "efficientnet" else 2048
+        self.image_features_dim = 2560 if backbone_type == "efficientnet" else 2048
         self.embedding_size = 300
         self.dropout = 0.2
         self.additional_layer_dropout = 0.2
