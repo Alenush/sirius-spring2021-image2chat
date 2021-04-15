@@ -59,6 +59,10 @@ class ImageChatDataset(Dataset):
 
     def _get_dialogue(self, episode_idx):
         data = self.data[self.idx_to_ep[episode_idx]]
+        if 'candidates' in data:
+            cands = data['candidates']
+        else:
+            cands = {}
         turn = self.idx_to_turn[episode_idx]
         personality, text = data['dialog'][turn]
         full_dialog = []
@@ -71,7 +75,8 @@ class ImageChatDataset(Dataset):
             'image_path': os.path.join(self.images_path, data['image_hash'] + '.jpg'),
             'true_continuation': text,
             'personality': personality,
-            'turn': turn
+            'turn': turn,
+            'candidates': cands
         }
 
     def personality_to_index(self, personality):
@@ -81,21 +86,28 @@ class ImageChatDataset(Dataset):
             res = 0
         return res
 
-    def sentence_to_tensor(self, sentence):
-        max_length = self._truncate_len
-        vec = self.dictionary.txt2vec(sentence)
-        if len(vec) > max_length:
-            vec = vec[:max_length]
+    def sentences_to_tensor(self, sentences):
+        res_all = []
+        masks_all = []
 
-        res = torch.LongTensor(max_length).fill_(self.dictionary.tok2ind[self.dictionary.null_token])
-        res[0: len(vec)] = torch.LongTensor(vec)
-        mask = torch.FloatTensor(max_length).fill_(0)
-        mask[0: len(vec)] = torch.FloatTensor([1] * len(vec))
+        for sentence in sentences:
+            max_length = self._truncate_len
+            vec = self.dictionary.txt2vec(sentence)
+            if len(vec) > max_length:
+                vec = vec[:max_length]
 
-        if self.use_cuda:
-            res = res.cuda()
-            mask = mask.cuda()
-        return res, mask
+            res = torch.LongTensor(max_length).fill_(self.dictionary.tok2ind[self.dictionary.null_token])
+            res[0: len(vec)] = torch.LongTensor(vec)
+            mask = torch.FloatTensor(max_length).fill_(0)
+            mask[0: len(vec)] = torch.FloatTensor([1] * len(vec))
+
+            if self.use_cuda:
+                res = res.cuda()
+                mask = mask.cuda()
+
+            res_all.append(res)
+            masks_all.append(mask)
+        return torch.stack(res_all), torch.stack(masks_all)
 
     def personality_to_tensor(self, personality):
         res = torch.FloatTensor(self.num_personalities).fill_(0)
@@ -112,8 +124,6 @@ class ImageChatDataset(Dataset):
     def __getitem__(self, idx):
         data = self._get_dialogue(idx)
         images_tensor = torch.squeeze(self.img_loader.load(data['image_path']))
-        d_indexes, d_mask = self.sentence_to_tensor(data['dialogue_history'])
-        l_indexes, l_mask = self.sentence_to_tensor(data['true_continuation'])
         personality_ohe = self.personality_to_tensor(data['personality'])
         turn = torch.LongTensor([data['turn']])
-        return images_tensor, personality_ohe, (d_indexes, d_mask), (l_indexes, l_mask), turn
+        return images_tensor, personality_ohe, data['dialogue_history'], data['true_continuation'], turn, data['candidates']
