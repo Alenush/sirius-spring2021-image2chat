@@ -120,7 +120,7 @@ def evaluate(args, model, test_ds):
                 top1[num_cands] += _top1
                 top5[num_cands] += _top5
                 top10[num_cands] += _top10
-                bleu[num_cands] += bleu
+                bleu[num_cands] += _bleu
                 top1_turn[num_cands][turn] += _top1
                 top5_turn[num_cands][turn] += _top5
                 top10_turn[num_cands][turn] += _top10
