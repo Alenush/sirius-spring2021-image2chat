@@ -27,7 +27,7 @@ def rank_output_candidates(dialogue_encoded, labels_encoded, labels_str, true_la
     return top1, top5, top10
 
 
-def apply_model(ds, image_tensor, personality_tensor, dialogue_history, labels):
+def apply_model(ds, model, image_tensor, personality_tensor, dialogue_history, labels):
     d_indexes, d_masks = ds.sentences_to_tensor(dialogue_history)
     l_indexes, l_masks = ds.sentences_to_tensor(labels)
 
@@ -98,7 +98,7 @@ if __name__ == '__main__':
             for num_cands in [100, 1000]:
                 labels = candidates[turn][str(num_cands)]
                 true_id = labels.index(true_continuation)
-                samples_encoded, answers_encoded = apply_model(test_ds, image, personality, dialogue_history, labels)
+                samples_encoded, answers_encoded = apply_model(test_ds, model, image, personality, dialogue_history, labels)
                 _top1, _top5, _top10 = rank_output_candidates(samples_encoded, answers_encoded, labels, true_id)
                 top1[num_cands] += _top1
                 top5[num_cands] += _top5
