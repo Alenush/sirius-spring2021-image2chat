@@ -17,6 +17,8 @@ def rank_output_candidates(dialogue_encoded, labels_encoded, labels_str, true_la
         order = torch.argsort(log_prob, descending=True)
         ranked = np.array(labels_str)[order.cpu().numpy()]
         ranked = np.squeeze(ranked)
+        if true_label is None:
+            return ranked[0]
         chosen = labels_str[true_label][0]
         top1 = chosen == ranked[0]
         top5 = chosen in ranked[:5]
@@ -47,7 +49,9 @@ def create_model_and_dataset(args):
         args.images_path,
         args.personalities_path,
         args.dict_path,
-        'test.json'
+        "test",
+        'resnext101_32x48d_wsl',
+        'test.json',
     )
 
     model = TransresnetMultimodalModel(test_ds.dictionary)
@@ -90,6 +94,7 @@ if __name__ == '__main__':
             if i % 100 == 0:
                 print(i)
             image, personality, dialogue_history, true_continuation, turn, candidates = batch
+            turn = turn[0].item()
             for num_cands in [100, 1000]:
                 labels = candidates[turn][str(num_cands)]
                 true_id = labels.index(true_continuation)

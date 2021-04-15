@@ -41,5 +41,5 @@ if __name__ == '__main__':
     test_ds, model = create_model_and_dataset(args)
     image_path = 'C://Users//daria.vinogradova//ParlAI//data//yfcc_images//2923e28b6f588aff2d469ab2cccfac57.jpg'
     personality = 'Fanatical'
-    dialogue_history = 'A little heavy on the make-up don\'t ya think.'
+    dialogue_history = ['A little heavy on the make-up don\'t ya think.']
     print(process_data(test_ds, image_path, personality, dialogue_history, candidates_list))

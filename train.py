@@ -139,7 +139,7 @@ if __name__ == '__main__':
         backbone_type,
         'valid.json',
     )
-    """
+
     test_ds = ImageChatDataset(
         args.dialogues_path,
         args.images_path,
@@ -149,17 +149,17 @@ if __name__ == '__main__':
         backbone_type,
         'test.json',
     )
-    """
+
 
     train_loader = DataLoader(train_ds, batch_size=args.batchsize, shuffle=True)
     valid_loader = DataLoader(valid_ds, batch_size=args.batchsize, shuffle=True)
-    #test_loader = DataLoader(test_ds, batch_size=args.batchsize, shuffle=True)
+    test_loader = DataLoader(test_ds, batch_size=args.batchsize, shuffle=True)
 
     model = TransresnetMultimodalModel(train_ds.dictionary, backbone_type)
     context_encoder_path = args.context_enc
     label_encoder_path = args.label_enc
-    #if context_encoder_path != '' and label_encoder_path != '':
-    #    load_transformers(model, context_encoder_path, label_encoder_path)
+    if context_encoder_path != '' and label_encoder_path != '':
+        load_transformers(model, context_encoder_path, label_encoder_path)
     if use_cuda:
         model = model.cuda()
 

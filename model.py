@@ -5,7 +5,7 @@ from efficientnet_pytorch import EfficientNet
 
 
 class TransresnetMultimodalModel(nn.Module):
-    def __init__(self, dictionary, backbone_type):
+    def __init__(self, dictionary, backbone_type=None):
         super().__init__()
         self.hidden_dim = 500
         self.image_features_dim = 1280 if backbone_type == "efficientnet" else 2048
