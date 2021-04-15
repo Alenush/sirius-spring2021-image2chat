@@ -104,6 +104,8 @@ class ImageLoader:
 
     def _init_efficientnet(self):
         self.netCNN = EfficentNetBackbone()
+        if self.use_cuda:
+            self.netCNN = self.netCNN.cuda()
 
     def _image_mode_switcher(self):
         return IMAGE_MODE_SWITCHER.get(self.image_mode)

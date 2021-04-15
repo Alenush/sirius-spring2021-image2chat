@@ -26,7 +26,7 @@ def rank_output_candidates(dialogue_encoded, labels_encoded, labels_str, true_la
         top1 = chosen == ranked[0]
         top5 = chosen in ranked[:5]
         top10 = chosen in ranked[:10]
-        bleu = BleuMetric().compute(chosen, ranked[0], 4)
+        bleu = BleuMetric().compute(chosen, [ranked[0]], 4)
     return top1, top5, top10, bleu
 
 
@@ -95,6 +95,8 @@ class BleuMetric:
 
 
 def evaluate(args, model, test_ds):
+    model.eval()
+
     top1 = {100: 0, 1000: 0}
     top5 = {100: 0, 1000: 0}
     top10 = {100: 0, 1000: 0}
@@ -103,6 +105,7 @@ def evaluate(args, model, test_ds):
     top5_turn = {100: [0, 0, 0], 1000: [0, 0, 0]}
     top10_turn = {100: [0, 0, 0], 1000: [0, 0, 0]}
     cnt = 0
+    cnt_turns = [0, 0, 0]
 
     with open(os.path.join(args.dialogues_path, 'test.json')) as f:
         test_loader = DataLoader(test_ds, batch_size=1, shuffle=True)
@@ -124,6 +127,7 @@ def evaluate(args, model, test_ds):
                 top1_turn[num_cands][turn] += _top1
                 top5_turn[num_cands][turn] += _top5
                 top10_turn[num_cands][turn] += _top10
+                cnt_turns[turn] += 1
             cnt += 1
 
     print(f'top1 acc: {top1[100] / cnt} for 100, {top1[1000] / cnt} for 1000')
@@ -133,9 +137,9 @@ def evaluate(args, model, test_ds):
 
     for turn in range(3):
         print(f'turn {turn}:')
-        print(f'top1 acc: {top1_turn[100][turn] / cnt} for 100, {top1_turn[1000][turn] / cnt} for 1000')
-        print(f'top5 acc: {top5_turn[100][turn] / cnt} for 100, {top5_turn[1000][turn] / cnt} for 1000')
-        print(f'top10 acc: {top10_turn[100][turn] / cnt} for 100, {top10_turn[1000][turn] / cnt} for 1000')
+        print(f'top1 acc: {top1_turn[100][turn] / cnt_turns[turn]} for 100, {top1_turn[1000][turn] / cnt_turns[turn]} for 1000')
+        print(f'top5 acc: {top5_turn[100][turn] / cnt_turns[turn]} for 100, {top5_turn[1000][turn] / cnt_turns[turn]} for 1000')
+        print(f'top10 acc: {top10_turn[100][turn] / cnt_turns[turn]} for 100, {top10_turn[1000][turn] / cnt_turns[turn]} for 1000')
 
 
 if __name__ == '__main__':
