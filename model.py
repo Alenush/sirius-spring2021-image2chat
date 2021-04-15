@@ -1,13 +1,14 @@
 from torch import nn
 from parlai.agents.transformer.modules import TransformerEncoder
 from parlai.core.opt import Opt
+from efficientnet_pytorch import EfficientNet
 
 
 class TransresnetMultimodalModel(nn.Module):
-    def __init__(self, dictionary):
+    def __init__(self, dictionary, backbone_type):
         super().__init__()
         self.hidden_dim = 500
-        self.image_features_dim = 2048
+        self.image_features_dim = 1280 if backbone_type == "efficientnet" else 2048
         self.embedding_size = 300
         self.dropout = 0.2
         self.additional_layer_dropout = 0.2
@@ -39,6 +40,10 @@ class TransresnetMultimodalModel(nn.Module):
     def _get_context_encoder(self):
         embeddings = nn.Embedding(len(self.dictionary), self.embedding_size)
         return TransformerEncoder(
+            #opt = Opt({'embedding_size': self.embedding_size,
+            #           'ffn_size': self.embedding_size * 4,
+            #           'n_layers': 4,
+            #           'n_heads': 6}),
             embedding_size=self.embedding_size,
             ffn_size=self.embedding_size * 4,
             n_layers=4,
@@ -72,3 +77,13 @@ class LinearWrapper(nn.Module):
 
     def forward(self, input):
         return self.lin(self.dp(input))
+
+
+class EfficentNetBackbone(nn.Module):
+    def __init__(self):
+        super().__init__()
+        self.model = EfficientNet.from_pretrained('efficientnet-b0')
+        self.pool = nn.AdaptiveAvgPool2d((1, 1))
+
+    def forward(self, X):
+        return self.pool(self.model.extract_features(X))
