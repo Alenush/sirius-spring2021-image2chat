@@ -1,6 +1,8 @@
 import torch
+import torch.nn as nn
 from PIL import Image
 from .utils import save_tensor
+from efficientnet_pytorch import EfficientNet
 import os
 
 IMAGE_MODE_SWITCHER = {
@@ -32,6 +34,8 @@ class ImageLoader:
             self._init_resnet_cnn()
         elif 'resnext' in self.image_mode:
             self._init_resnext_cnn()
+        elif 'efficientnet' in self.image_mode:
+            self._init_efficientnet()
 
     def _init_transform(self):
         # initialize the transform function using torch vision.
@@ -49,6 +53,15 @@ class ImageLoader:
             [
                 self.transforms.Scale(self.image_size),
                 self.transforms.CenterCrop(self.crop_size),
+                self.transforms.ToTensor(),
+                self.transforms.Normalize(
+                    mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225]
+                ),
+            ]
+        )
+        self.transform_test = self.transforms.Compose(
+            [
+                self.transforms.Scale(self.crop_size),
                 self.transforms.ToTensor(),
                 self.transforms.Normalize(
                     mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225]
@@ -85,6 +98,10 @@ class ImageLoader:
 
         if self.use_cuda:
             self.netCNN.cuda()
+
+    def _init_efficientnet(self):
+        model = EfficientNet.from_pretrained('efficientnet-b0', num_classes=-1)
+        self.netCNN = nn.Sequential(model, nn.AdaptiveAvgPool2d((1, 1)))
 
     def _image_mode_switcher(self):
         return IMAGE_MODE_SWITCHER.get(self.image_mode)
