@@ -126,21 +126,24 @@ if __name__ == '__main__':
         args.dialogues_path,
         args.images_path,
         args.personalities_path,
-        args.dict_path
+        args.dict_path,
+        "train"
     )
     valid_ds = ImageChatDataset(
         args.dialogues_path,
         args.images_path,
         args.personalities_path,
         args.dict_path,
-        'valid.json'
+        'valid.json',
+        "val"
     )
     test_ds = ImageChatDataset(
         args.dialogues_path,
         args.images_path,
         args.personalities_path,
         args.dict_path,
-        'test.json'
+        'test.json',
+        "test"
     )
 
     train_loader = DataLoader(train_ds, batch_size=args.batchsize, shuffle=True)

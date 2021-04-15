@@ -8,12 +8,13 @@ from data_loader.dictionary import Dictionary
 
 
 class ImageChatDataset(Dataset):
-    def __init__(self, dialogs_path, images_path, personalities_path, dict_path, prefix='train.json'):
+    def __init__(self, dialogs_path, images_path, personalities_path, dict_path, split, prefix='train.json'):
         self.use_cuda = torch.cuda.is_available()
         self.img_loader = ImageLoader({
             'image_mode': 'resnext101_32x48d_wsl', #'efficientnet'
             'image_size': 256,
-            'image_cropsize': 224
+            'image_cropsize': 224,
+            'split': split
         })
         self.images_path = images_path
         self._extract_text_and_images(os.path.join(dialogs_path, prefix), images_path, personalities_path)

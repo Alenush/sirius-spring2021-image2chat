@@ -29,7 +29,7 @@ class ImageLoader:
         self.image_size = opt['image_size']
         self.crop_size = opt['image_cropsize']
         self.use_cuda = torch.cuda.is_available()
-        self._init_transform()
+        self._init_transform(opt['split'])
         if 'resnet' in self.image_mode:
             self._init_resnet_cnn()
         elif 'resnext' in self.image_mode:
@@ -37,7 +37,7 @@ class ImageLoader:
         elif 'efficientnet' in self.image_mode:
             self._init_efficientnet()
 
-    def _init_transform(self):
+    def _init_transform(self, split):
         # initialize the transform function using torch vision.
         try:
             import torchvision
@@ -49,25 +49,27 @@ class ImageLoader:
         except ImportError:
             raise ImportError('Please install torchvision; see https://pytorch.org/')
 
-        self.transform = self.transforms.Compose(
-            [
-                self.transforms.Scale(self.image_size),
-                self.transforms.CenterCrop(self.crop_size),
-                self.transforms.ToTensor(),
-                self.transforms.Normalize(
-                    mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225]
-                ),
-            ]
-        )
-        self.transform_test = self.transforms.Compose(
-            [
-                self.transforms.Scale(self.crop_size),
-                self.transforms.ToTensor(),
-                self.transforms.Normalize(
-                    mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225]
-                ),
-            ]
-        )
+        if split == "train":
+            self.transform = self.transforms.Compose(
+                [
+                    self.transforms.Scale(self.image_size),
+                    self.transforms.CenterCrop(self.crop_size),
+                    self.transforms.ToTensor(),
+                    self.transforms.Normalize(
+                        mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225]
+                    ),
+                ]
+            )
+        else:
+            self.transform_test = self.transforms.Compose(
+                [
+                    self.transforms.Scale(self.crop_size),
+                    self.transforms.ToTensor(),
+                    self.transforms.Normalize(
+                        mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225]
+                    ),
+                ]
+            )
 
     def _init_resnet_cnn(self):
         """
