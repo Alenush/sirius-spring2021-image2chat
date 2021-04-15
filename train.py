@@ -100,7 +100,7 @@ def save_state(model, optimizer, path):
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
-    parser.add_argument('--backbone', default="resnet", help='type of backbone')
+    parser.add_argument('--backbone', default="resnet152", help='type of backbone')
     parser.add_argument('--epochs', default=10, type=int, help='number of epochs')
     parser.add_argument('--batchsize', default=500, type=int, help='batch size')
     parser.add_argument('--images_path', default='C://Users//daria.vinogradova//ParlAI//data//yfcc_images', type=str)
@@ -125,7 +125,7 @@ if __name__ == '__main__':
     parser.add_argument('--early_stopping', type=int, default=5)
 
     args = parser.parse_args()
-    if args.backbone not in ["resnext", "resnext", "efficientnet"]:
+    if args.backbone not in ["resnet152", "resnext101_32x48d_wsl", "efficientnet"]:
         raise ValueError(f"Only resnet, resnext and  efficientnet are supported as a backbone, not {args.backbone}.")
     train_ds = ImageChatDataset(
         args.dialogues_path,
@@ -140,9 +140,9 @@ if __name__ == '__main__':
         args.images_path,
         args.personalities_path,
         args.dict_path,
-        "val",
+        "valid",
         args.backbone,
-        'val.json',
+        'valid.json',
     )
 
     test_ds = ImageChatDataset(
@@ -173,7 +173,7 @@ if __name__ == '__main__':
     best_val_acc, no_updates, stopped = -1, 0, False
     valid_after_n_bathes = int(args.valid_after_epoch_fraction * n_batches)
 
-    for epoch in range(0):
+    for epoch in range(args.epochs):
         model.train()
         valid_cnt = 0
         for i, batch in enumerate(train_loader):
