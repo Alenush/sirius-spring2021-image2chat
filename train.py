@@ -1,6 +1,8 @@
 import argparse
 from data_loader.batch_creator import ImageChatDataset
 from torch.utils.data import DataLoader
+
+from evaluation import evaluate
 from model import TransresnetMultimodalModel
 import torch
 from torch import optim
@@ -88,6 +90,7 @@ def compute_metrics(valid_loader):
         mean_acc10 = (turns_acc10[0] + turns_acc10[1] + turns_acc10[2]) / (turns_cnt[0] + turns_cnt[1] + turns_cnt[2])
         return mean_acc1, mean_acc5, mean_acc10
 
+
 def save_state(model, optimizer, path):
     torch.save({
         'model_state_dict': model.state_dict(),
@@ -137,7 +140,7 @@ if __name__ == '__main__':
         args.dict_path,
         "val",
         backbone_type,
-        'valid.json',
+        'val.json',
     )
 
     test_ds = ImageChatDataset(
@@ -168,7 +171,7 @@ if __name__ == '__main__':
     best_val_acc, no_updates, stopped = -1, 0, False
     valid_after_n_bathes = int(args.valid_after_epoch_fraction * n_batches)
 
-    for epoch in range(args.epochs):
+    for epoch in range(0):
         model.train()
         valid_cnt = 0
         for i, batch in enumerate(train_loader):
@@ -216,5 +219,4 @@ if __name__ == '__main__':
         if stopped:
             break
 
-    print(f'test acc: {compute_metrics(test_loader)}')
-
+    evaluate(args, model, valid_ds)

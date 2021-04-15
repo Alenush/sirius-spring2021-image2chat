@@ -63,23 +63,7 @@ def create_model_and_dataset(args):
     return test_ds, model
 
 
-if __name__ == '__main__':
-    parser = argparse.ArgumentParser()
-    parser.add_argument('--images_path', default='C://Users//daria.vinogradova//ParlAI//data//yfcc_images', type=str)
-    parser.add_argument('--dialogues_path', default='C://Users//daria.vinogradova//ParlAI//data//image_chat', type=str)
-    parser.add_argument('--dict_path',
-                        default='C://Users//daria.vinogradova//ParlAI//data//models//image_chat//transresnet_multimodal//model.dict',
-                        type=str)
-    parser.add_argument('--personalities_path',
-                        default='C://Users//daria.vinogradova//ParlAI//data//personality_captions//personalities.json',
-                        type=str)
-    parser.add_argument('--model_path',
-                        default='C://Users//daria.vinogradova//ParlAI//data//models//image_chat//model_resnext_1',
-                        type=str)
-
-    args = parser.parse_args()
-    test_ds, model = create_model_and_dataset(args)
-
+def evaluate(args, model, test_ds):
     top1 = {100: 0, 1000: 0}
     top5 = {100: 0, 1000: 0}
     top10 = {100: 0, 1000: 0}
@@ -98,7 +82,8 @@ if __name__ == '__main__':
             for num_cands in [100, 1000]:
                 labels = candidates[turn][str(num_cands)]
                 true_id = labels.index(true_continuation)
-                samples_encoded, answers_encoded = apply_model(test_ds, model, image, personality, dialogue_history, labels)
+                samples_encoded, answers_encoded = apply_model(test_ds, model, image, personality, dialogue_history,
+                                                               labels)
                 _top1, _top5, _top10 = rank_output_candidates(samples_encoded, answers_encoded, labels, true_id)
                 top1[num_cands] += _top1
                 top5[num_cands] += _top5
@@ -117,3 +102,22 @@ if __name__ == '__main__':
         print(f'top1 acc: {top1_turn[100][turn] / cnt} for 100, {top1_turn[1000][turn] / cnt} for 1000')
         print(f'top5 acc: {top5_turn[100][turn] / cnt} for 100, {top5_turn[1000][turn] / cnt} for 1000')
         print(f'top10 acc: {top10_turn[100][turn] / cnt} for 100, {top10_turn[1000][turn] / cnt} for 1000')
+
+
+if __name__ == '__main__':
+    parser = argparse.ArgumentParser()
+    parser.add_argument('--images_path', default='C://Users//daria.vinogradova//ParlAI//data//yfcc_images', type=str)
+    parser.add_argument('--dialogues_path', default='C://Users//daria.vinogradova//ParlAI//data//image_chat', type=str)
+    parser.add_argument('--dict_path',
+                        default='C://Users//daria.vinogradova//ParlAI//data//models//image_chat//transresnet_multimodal//model.dict',
+                        type=str)
+    parser.add_argument('--personalities_path',
+                        default='C://Users//daria.vinogradova//ParlAI//data//personality_captions//personalities.json',
+                        type=str)
+    parser.add_argument('--model_path',
+                        default='C://Users//daria.vinogradova//ParlAI//data//models//image_chat//model_resnext_1',
+                        type=str)
+
+    args = parser.parse_args()
+    test_ds, model = create_model_and_dataset(args)
+    evaluate(args, model, test_ds)
