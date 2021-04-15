@@ -17,7 +17,7 @@ def parse_candidates(path):
         for line in f:
             if len(line) > 1:
                 cands.append(line[:-1])
-    return cands[:100000]
+    return cands[:10000]
 
 
 if __name__ == '__main__':
