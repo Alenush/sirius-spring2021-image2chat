@@ -10,7 +10,7 @@ from data_loader.batch_creator import ImageChatDataset
 use_cuda = torch.cuda.is_available()
 
 
-def rank_candidates(dialogue_encoded, labels_encoded, labels_str, true_label):
+def rank_output_candidates(dialogue_encoded, labels_encoded, labels_str, true_label):
     with torch.no_grad():
         dot_products = torch.mm(dialogue_encoded, labels_encoded.t())
         log_prob = log_softmax(dot_products, dim=1)
@@ -23,6 +23,40 @@ def rank_candidates(dialogue_encoded, labels_encoded, labels_str, true_label):
         top10 = chosen in ranked[:10]
         #print(labels_str[true_label][0])
     return top1, top5, top10
+
+
+def apply_model(ds, image_tensor, personality_tensor, dialogue_history, labels):
+    d_indexes, d_masks = ds.sentences_to_tensor(dialogue_history)
+    l_indexes, l_masks = ds.sentences_to_tensor(labels)
+
+    if use_cuda:
+        image_tensor = image_tensor.cuda()
+        personality_tensor = personality_tensor.cuda()
+        d_indexes = d_indexes.cuda()
+        d_masks = d_masks.cuda()
+        l_indexes = l_indexes.cuda()
+        l_masks = l_masks.cuda()
+
+    return model(image_tensor, personality_tensor, (d_indexes, d_masks),
+                                             (l_indexes, l_masks))
+
+
+def create_model_and_dataset(args):
+    test_ds = ImageChatDataset(
+        args.dialogues_path,
+        args.images_path,
+        args.personalities_path,
+        args.dict_path,
+        'test.json'
+    )
+
+    model = TransresnetMultimodalModel(test_ds.dictionary)
+    model.load_state_dict(torch.load(args.model_path,
+                                     map_location=torch.device('cpu') if not use_cuda else None)['model_state_dict'])
+    if use_cuda:
+        model = model.cuda()
+    model.eval()
+    return test_ds, model
 
 
 if __name__ == '__main__':
@@ -40,20 +74,7 @@ if __name__ == '__main__':
                         type=str)
 
     args = parser.parse_args()
-    test_ds = ImageChatDataset(
-        args.dialogues_path,
-        args.images_path,
-        args.personalities_path,
-        args.dict_path,
-        'test.json'
-    )
-
-    model = TransresnetMultimodalModel(test_ds.dictionary)
-    model.load_state_dict(torch.load(args.model_path,
-                                     map_location=torch.device('cpu') if not use_cuda else None)['model_state_dict'])
-    if use_cuda:
-        model = model.cuda()
-    model.eval()
+    test_ds, model = create_model_and_dataset(args)
 
     top1 = {100: 0, 1000: 0}
     top5 = {100: 0, 1000: 0}
@@ -69,21 +90,8 @@ if __name__ == '__main__':
             for num_cands in [100, 1000]:
                 labels = candidates[turn][str(num_cands)]
                 true_id = labels.index(true_continuation)
-
-                d_indexes, d_masks = test_ds.sentences_to_tensor(dialogue_history)
-                l_indexes, l_masks = test_ds.sentences_to_tensor(labels)
-
-                if use_cuda:
-                    image = image.cuda()
-                    personality = personality.cuda()
-                    d_indexes = d_indexes.cuda()
-                    d_masks = d_masks.cuda()
-                    l_indexes = l_indexes.cuda()
-                    l_masks = l_masks.cuda()
-
-                samples_encoded, answers_encoded = model(image, personality, (d_indexes, d_masks),
-                                                         (l_indexes, l_masks))
-                _top1, _top5, _top10 = rank_candidates(samples_encoded, answers_encoded, labels, true_id)
+                samples_encoded, answers_encoded = apply_model(test_ds, image, personality, dialogue_history, labels)
+                _top1, _top5, _top10 = rank_output_candidates(samples_encoded, answers_encoded, labels, true_id)
                 top1[num_cands] += _top1
                 top5[num_cands] += _top5
                 top10[num_cands] += _top10
