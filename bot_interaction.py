@@ -3,19 +3,20 @@ import argparse
 from evaluation import apply_model, rank_output_candidates, create_model_and_dataset
 
 
-def process_data(ds, image_path, personality, dialogue_history, candidates_list):
+def process_data(ds, model, image_path, personality, dialogue_history, candidates_list):
     image_tensor = torch.squeeze(ds.img_loader.load(image_path))
     personality_ohe = ds.personality_to_tensor(personality)
-    samples_encoded, answers_encoded = apply_model(ds, image_tensor, personality_ohe, dialogue_history, candidates_list)
+    samples_encoded, answers_encoded = apply_model(ds, model, image_tensor, personality_ohe, dialogue_history, candidates_list)
     top_answer = rank_output_candidates(samples_encoded, answers_encoded, candidates_list, None)
     return top_answer
 
 
 def parse_candidates(path):
     cands = []
-    with open(path, 'r') as f:
+    with open(path, 'r', encoding="utf-8") as f:
         for line in f:
-            cands.append(line)
+            if len(line) > 1:
+                cands.append(line[:-1])
     return cands
 
 
@@ -42,4 +43,4 @@ if __name__ == '__main__':
     image_path = 'C://Users//daria.vinogradova//ParlAI//data//yfcc_images//2923e28b6f588aff2d469ab2cccfac57.jpg'
     personality = 'Fanatical'
     dialogue_history = ['A little heavy on the make-up don\'t ya think.']
-    print(process_data(test_ds, image_path, personality, dialogue_history, candidates_list))
+    print(process_data(test_ds, model, image_path, personality, dialogue_history, candidates_list))
