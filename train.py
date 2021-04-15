@@ -100,6 +100,7 @@ def save_state(model, optimizer, path):
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
+    parser.add_argument('--backbone', default="resnet", help='type of backbone')
     parser.add_argument('--epochs', default=10, type=int, help='number of epochs')
     parser.add_argument('--batchsize', default=500, type=int, help='batch size')
     parser.add_argument('--images_path', default='C://Users//daria.vinogradova//ParlAI//data//yfcc_images', type=str)
@@ -124,14 +125,15 @@ if __name__ == '__main__':
     parser.add_argument('--early_stopping', type=int, default=5)
 
     args = parser.parse_args()
-    backbone_type = "efficientnet"
+    if args.backbone not in ["resnext", "resnext", "efficientnet"]:
+        raise ValueError(f"Only resnet, resnext and  efficientnet are supported as a backbone, not {args.backbone}.")
     train_ds = ImageChatDataset(
         args.dialogues_path,
         args.images_path,
         args.personalities_path,
         args.dict_path,
         "train",
-        backbone_type
+        args.backbone
     )
     valid_ds = ImageChatDataset(
         args.dialogues_path,
@@ -139,7 +141,7 @@ if __name__ == '__main__':
         args.personalities_path,
         args.dict_path,
         "val",
-        backbone_type,
+        args.backbone,
         'val.json',
     )
 
@@ -149,7 +151,7 @@ if __name__ == '__main__':
         args.personalities_path,
         args.dict_path,
         "test",
-        backbone_type,
+        args.backbone,
         'test.json',
     )
 
@@ -158,7 +160,7 @@ if __name__ == '__main__':
     valid_loader = DataLoader(valid_ds, batch_size=args.batchsize, shuffle=True)
     test_loader = DataLoader(test_ds, batch_size=args.batchsize, shuffle=True)
 
-    model = TransresnetMultimodalModel(train_ds.dictionary, backbone_type)
+    model = TransresnetMultimodalModel(train_ds.dictionary, args.backbone)
     context_encoder_path = args.context_enc
     label_encoder_path = args.label_enc
     if context_encoder_path != '' and label_encoder_path != '':
