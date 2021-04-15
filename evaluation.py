@@ -6,6 +6,9 @@ from torch.utils.data import DataLoader
 from torch.nn.functional import log_softmax
 from model import TransresnetMultimodalModel
 from data_loader.batch_creator import ImageChatDataset
+import re
+import argparse
+from nltk.translate import bleu_score as nltkbleu
 
 use_cuda = torch.cuda.is_available()
 
@@ -23,8 +26,8 @@ def rank_output_candidates(dialogue_encoded, labels_encoded, labels_str, true_la
         top1 = chosen == ranked[0]
         top5 = chosen in ranked[:5]
         top10 = chosen in ranked[:10]
-        #print(labels_str[true_label][0])
-    return top1, top5, top10
+        bleu = BleuMetric().compute(chosen, ranked[0], 4)
+    return top1, top5, top10, bleu
 
 
 def apply_model(ds, model, image_tensor, personality_tensor, dialogue_history, labels):
@@ -63,10 +66,39 @@ def create_model_and_dataset(args):
     return test_ds, model
 
 
+class BleuMetric:
+    @staticmethod
+    def normalize_answer(s):
+        re_punc = re.compile(r'[!"#$%&()*+,-./:;<=>?@\[\]\\^`{|}~_\']')
+        re_art = re.compile(r'\b(a|an|the)\b')
+        s = s.lower()
+        s = re_punc.sub(' ', s)
+        s = re_art.sub(' ', s)
+        s = ' '.join(s.split())
+        return s
+
+    @staticmethod
+    def compute(guess, answers, k):
+        if nltkbleu is None:
+            # bleu library not installed, just return a default value
+            return None
+
+        weights = [1 / k for _ in range(k)]
+
+        score = nltkbleu.sentence_bleu(
+            [BleuMetric.normalize_answer(a).split(" ") for a in answers],
+            BleuMetric.normalize_answer(guess).split(" "),
+            smoothing_function=nltkbleu.SmoothingFunction(epsilon=1e-12).method1,
+            weights=weights,
+        )
+        return (score)
+
+
 def evaluate(args, model, test_ds):
     top1 = {100: 0, 1000: 0}
     top5 = {100: 0, 1000: 0}
     top10 = {100: 0, 1000: 0}
+    bleu = {100: 0, 1000: 0}
     top1_turn = {100: [0, 0, 0], 1000: [0, 0, 0]}
     top5_turn = {100: [0, 0, 0], 1000: [0, 0, 0]}
     top10_turn = {100: [0, 0, 0], 1000: [0, 0, 0]}
@@ -84,10 +116,11 @@ def evaluate(args, model, test_ds):
                 true_id = labels.index(true_continuation)
                 samples_encoded, answers_encoded = apply_model(test_ds, model, image, personality, dialogue_history,
                                                                labels)
-                _top1, _top5, _top10 = rank_output_candidates(samples_encoded, answers_encoded, labels, true_id)
+                _top1, _top5, _top10, _bleu = rank_output_candidates(samples_encoded, answers_encoded, labels, true_id)
                 top1[num_cands] += _top1
                 top5[num_cands] += _top5
                 top10[num_cands] += _top10
+                bleu[num_cands] += bleu
                 top1_turn[num_cands][turn] += _top1
                 top5_turn[num_cands][turn] += _top5
                 top10_turn[num_cands][turn] += _top10
@@ -96,6 +129,7 @@ def evaluate(args, model, test_ds):
     print(f'top1 acc: {top1[100] / cnt} for 100, {top1[1000] / cnt} for 1000')
     print(f'top5 acc: {top5[100] / cnt} for 100, {top5[1000] / cnt} for 1000')
     print(f'top10 acc: {top10[100] / cnt} for 100, {top10[1000] / cnt} for 1000')
+    print(f'bleu: {bleu[100] / cnt} for 100, {bleu[1000] / cnt} for 1000')
 
     for turn in range(3):
         print(f'turn {turn}:')
