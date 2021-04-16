@@ -66,7 +66,7 @@ class TransresnetMultimodalModel(nn.Module):
         l_indexes, l_mask = labels
         forward_image = self.image_encoder(images_tensor)
         if self.use_personality:
-            forward_personality = self.personality_encoder(personality_ohe)
+            forward_personality = self.personality_encoder(forward_image)
         else:
             forward_personality = torch.zeros_like(personality_ohe)
         forward_dialogue = self.additional_layer(self.context_encoder(d_indexes))
