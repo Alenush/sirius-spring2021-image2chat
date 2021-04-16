@@ -16,7 +16,7 @@ class TransresnetMultimodalModel(nn.Module):
         self.additional_layer_dropout = 0.2
         self.dictionary = dictionary
         self.num_personalities = 216
-        self.use_personality = False
+        self.use_personality = True
 
         self._build_image_encoder()
         self._build_personality_encoder()
