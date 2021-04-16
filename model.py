@@ -23,7 +23,7 @@ class TransresnetMultimodalModel(nn.Module):
         self._build_label_encoder()
         self.context_encoder = self._get_context_encoder()
         self.label_encoder = self._get_context_encoder()
-        self.combine_layer = torch.empty(3)
+        self.combine_layer = torch.empty(3, requires_grad=True)
         nn.init.uniform_(self.combine_layer)
 
     def _build_image_encoder(self):
