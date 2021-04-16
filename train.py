@@ -203,13 +203,14 @@ if __name__ == '__main__':
             if i % valid_after_n_bathes == 0 and i > 0:
                 val_acc1, val_acc5, val_acc10 = compute_metrics(valid_loader)
                 if val_acc1 > best_val_acc:
+                    save_state(model, optimizer, args.save_model_path)
                     best_val_acc = val_acc1
                     no_updates = 0
                 else:
                     no_updates += 1
                     if no_updates == args.early_stopping:
                         print(f"No updates of accuracy for {no_updates} steps, stopping training")
-                        save_state(model, optimizer, args.save_model_path)
+                        #save_state(model, optimizer, args.save_model_path)
                         stopped = True
                         break
                 print("valid accuracy1: ", val_acc1.item())
@@ -221,4 +222,4 @@ if __name__ == '__main__':
         if stopped:
             break
 
-    evaluate(args, model, valid_ds)
+    #evaluate(args, model, valid_ds)
