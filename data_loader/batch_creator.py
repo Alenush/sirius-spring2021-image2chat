@@ -127,4 +127,6 @@ class ImageChatDataset(Dataset):
         images_tensor = torch.squeeze(self.img_loader.load(data['image_path']))
         personality_ohe = self.personality_to_tensor(data['personality'])
         turn = torch.LongTensor([data['turn']])
+        #print(type(images_tensor), images_tensor.shape, images_tensor.device)
+        #print(type(personality_ohe), images_tensor.shape, images_tensor.device)
         return images_tensor, personality_ohe, data['dialogue_history'], data['true_continuation'], turn, data['candidates']

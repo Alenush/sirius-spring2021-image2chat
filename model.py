@@ -1,3 +1,4 @@
+import torch
 from torch import nn
 from parlai.agents.transformer.modules import TransformerEncoder
 import torch
@@ -15,6 +16,7 @@ class TransresnetMultimodalModel(nn.Module):
         self.additional_layer_dropout = 0.2
         self.dictionary = dictionary
         self.num_personalities = 216
+        self.use_personality = False
 
         self._build_image_encoder()
         self._build_personality_encoder()
@@ -65,7 +67,10 @@ class TransresnetMultimodalModel(nn.Module):
         d_indexes, d_mask = dialogue
         l_indexes, l_mask = labels
         forward_image = self.image_encoder(images_tensor)
-        forward_personality = self.personality_encoder(personality_ohe)
+        if self.use_personality:
+            forward_personality = self.personality_encoder(personality_ohe)
+        else:
+            forward_personality = torch.zeros_like(forward_image)
         forward_dialogue = self.additional_layer(self.context_encoder(d_indexes))
         forward_labels = self.additional_layer(self.label_encoder(l_indexes))
         combine = self.combine_layer(torch.cat((forward_dialogue, forward_image, forward_personality)))
