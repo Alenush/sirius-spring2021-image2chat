@@ -118,6 +118,7 @@ class ImageLoader:
             transform = transform.cuda()
         with torch.no_grad():
             feature = self.netCNN(transform)
+        print("in extract", feature.device)
         # save the feature
         if path is not None:
             save_tensor(feature.cpu(), path)
