@@ -23,7 +23,7 @@ class TransresnetMultimodalModel(nn.Module):
         self._build_label_encoder()
         self.context_encoder = self._get_context_encoder()
         self.label_encoder = self._get_context_encoder()
-        self.combine_layer = torch.empty(3, 1)
+        self.combine_layer = torch.empty(3)
         nn.init.uniform_(self.combine_layer)
 
     def _build_image_encoder(self):
@@ -74,7 +74,8 @@ class TransresnetMultimodalModel(nn.Module):
             forward_personality = torch.zeros_like(forward_image)
         forward_dialogue = self.additional_layer(self.context_encoder(d_indexes))
         forward_labels = self.additional_layer(self.label_encoder(l_indexes))
-        combine = torch.mm(torch.stack((forward_dialogue, forward_image, forward_personality)), self.combine_layer)
+        #combine = torch.mm(torch.stack((forward_dialogue, forward_image, forward_personality)), self.combine_layer)
+        combine = forward_dialogue * self.combine_layer[0] + forward_image * self.combine_layer[1] + forward_personality * self.combine_layer[2]
         return combine, forward_labels
 
 
