@@ -21,7 +21,7 @@ class TransresnetMultimodalModel(nn.Module):
         self._build_personality_encoder()
         self._build_label_encoder()
         self.context_encoder = self._get_context_encoder()
-        self.label_encoder = self.context_encoder #self._get_context_encoder()
+        self.label_encoder = self._get_context_encoder() #self.context_encoder
 
     def _build_image_encoder(self):
         image_layers = [
@@ -66,9 +66,9 @@ class TransresnetMultimodalModel(nn.Module):
         l_indexes, l_mask = labels
         forward_image = self.image_encoder(images_tensor)
         if self.use_personality:
-            forward_personality = self.personality_encoder(forward_image)
+            forward_personality = self.personality_encoder(personality_ohe)
         else:
-            forward_personality = torch.zeros_like(personality_ohe)
+            forward_personality = torch.zeros_like(forward_image)
         forward_dialogue = self.additional_layer(self.context_encoder(d_indexes))
         forward_labels = self.additional_layer(self.label_encoder(l_indexes))
         return forward_dialogue + forward_image + forward_personality, forward_labels
