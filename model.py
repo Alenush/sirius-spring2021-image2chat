@@ -19,7 +19,7 @@ class TransresnetMultimodalModel(nn.Module):
         self._build_personality_encoder()
         self._build_label_encoder()
         self.context_encoder = self._get_context_encoder()
-        self.label_encoder = self._get_context_encoder()
+        self.label_encoder = self.context_encoder #self._get_context_encoder()
 
     def _build_image_encoder(self):
         image_layers = [
