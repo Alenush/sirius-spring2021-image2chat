@@ -86,7 +86,7 @@ class ImageLoader:
         self.netCNN = torch.nn.Sequential(*list(CNN(pretrained=True).children())[:layer_num])
 
         if self.use_cuda:
-            self.netCNN = self.netCNN.cuda()
+            self.netCNN.cuda()
 
     def _init_resnext_cnn(self):
         """
@@ -100,12 +100,10 @@ class ImageLoader:
         self.netCNN = torch.nn.Sequential(*list(model.children())[:layer_num])
 
         if self.use_cuda:
-            self.netCNN = self.netCNN.cuda()
+            self.netCNN.cuda()
 
     def _init_efficientnet(self):
         self.netCNN = EfficentNetBackbone()
-        if self.use_cuda:
-            self.netCNN = self.netCNN.cuda()
 
     def _image_mode_switcher(self):
         return IMAGE_MODE_SWITCHER.get(self.image_mode)
@@ -118,7 +116,6 @@ class ImageLoader:
             transform = transform.cuda()
         with torch.no_grad():
             feature = self.netCNN(transform)
-        #print("in extract", feature.device)
         # save the feature
         if path is not None:
             save_tensor(feature.cpu(), path)
@@ -152,4 +149,4 @@ class ImageLoader:
             return self.extract(self._load_image(path), new_path)
         else:
             with open(new_path, 'rb') as f:
-                return torch.load(f).cuda()
+                return torch.load(f)
