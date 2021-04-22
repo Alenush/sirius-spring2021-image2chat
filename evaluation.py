@@ -52,8 +52,8 @@ def create_model_and_dataset(args):
         args.images_path,
         args.personalities_path,
         args.dict_path,
-        "test",
-        'resnext101_32x48d_wsl',
+        'test',
+        args.backbone,
         'test.json',
     )
 
@@ -127,7 +127,7 @@ def evaluate(args, model, test_ds):
                 top1_turn[num_cands][turn] += _top1
                 top5_turn[num_cands][turn] += _top5
                 top10_turn[num_cands][turn] += _top10
-                cnt_turns[turn] += 1
+            cnt_turns[turn] += 1
             cnt += 1
 
     print(f'top1 acc: {top1[100] / cnt} for 100, {top1[1000] / cnt} for 1000')
@@ -144,17 +144,18 @@ def evaluate(args, model, test_ds):
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
-    parser.add_argument('--images_path', default='C://Users//daria.vinogradova//ParlAI//data//yfcc_images', type=str)
-    parser.add_argument('--dialogues_path', default='C://Users//daria.vinogradova//ParlAI//data//image_chat', type=str)
+    parser.add_argument('--images_path', default='data//yfcc_images', type=str)
+    parser.add_argument('--dialogues_path', default='data//image_chat', type=str)
     parser.add_argument('--dict_path',
-                        default='C://Users//daria.vinogradova//ParlAI//data//models//image_chat//transresnet_multimodal//model.dict',
+                        default='data//models//image_chat//transresnet_multimodal//model.dict',
                         type=str)
     parser.add_argument('--personalities_path',
-                        default='C://Users//daria.vinogradova//ParlAI//data//personality_captions//personalities.json',
+                        default='data//personalities.json',
                         type=str)
     parser.add_argument('--model_path',
                         default='C://Users//daria.vinogradova//ParlAI//data//models//image_chat//model_resnext_1',
                         type=str)
+    parser.add_argument('--backbone', default="resnet152", help='type of backbone')
 
     args = parser.parse_args()
     test_ds, model = create_model_and_dataset(args)

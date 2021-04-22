@@ -101,6 +101,10 @@ def save_state(model, optimizer, path):
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
     parser.add_argument('--backbone', default="resnet152", help='type of backbone')
+    parser.add_argument('--use_personality', default=True, type=bool, help='using personality vector')
+    parser.add_argument('--combine_type', default="sum", help='type of combine')
+    parser.add_argument('--personalities_num', default=216, type=int, help='number of personalities')
+    
     parser.add_argument('--epochs', default=10, type=int, help='number of epochs')
     parser.add_argument('--batchsize', default=500, type=int, help='batch size')
     parser.add_argument('--images_path', default='C://Users//daria.vinogradova//ParlAI//data//yfcc_images', type=str)
@@ -160,7 +164,7 @@ if __name__ == '__main__':
     valid_loader = DataLoader(valid_ds, batch_size=args.batchsize, shuffle=True)
     test_loader = DataLoader(test_ds, batch_size=args.batchsize, shuffle=True)
 
-    model = TransresnetMultimodalModel(train_ds.dictionary, args.backbone)
+    model = TransresnetMultimodalModel(train_ds.dictionary, args)
     context_encoder_path = args.context_enc
     label_encoder_path = args.label_enc
     if context_encoder_path != '' and label_encoder_path != '':

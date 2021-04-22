@@ -7,16 +7,17 @@ from efficientnet_pytorch import EfficientNet
 
 
 class TransresnetMultimodalModel(nn.Module):
-    def __init__(self, dictionary, backbone_type=None):
+    def __init__(self, dictionary, args):
         super().__init__()
         self.hidden_dim = 500
-        self.image_features_dim = 2560 if backbone_type == "efficientnet" else 2048
+        self.image_features_dim = 2560 if args.backbone == "efficientnet" else 2048
         self.embedding_size = 300
         self.dropout = 0.2
         self.additional_layer_dropout = 0.2
         self.dictionary = dictionary
-        self.num_personalities = 216
-        self.use_personality = True
+        self.num_personalities = args.num_personalities
+        self.use_personality = args.use_personality
+        self.combine_type = args.combine_type
 
         self._build_image_encoder()
         self._build_personality_encoder()
@@ -45,10 +46,6 @@ class TransresnetMultimodalModel(nn.Module):
     def _get_context_encoder(self):
         embeddings = nn.Embedding(len(self.dictionary), self.embedding_size)
         return TransformerEncoder(
-            #opt = Opt({'embedding_size': self.embedding_size,
-            #           'ffn_size': self.embedding_size * 4,
-            #           'n_layers': 4,
-            #           'n_heads': 6}),
             embedding_size=self.embedding_size,
             ffn_size=self.embedding_size * 4,
             n_layers=4,
@@ -74,8 +71,10 @@ class TransresnetMultimodalModel(nn.Module):
             forward_personality = torch.zeros_like(forward_image)
         forward_dialogue = self.additional_layer(self.context_encoder(d_indexes))
         forward_labels = self.additional_layer(self.label_encoder(l_indexes))
-        #combine = torch.mm(torch.stack((forward_dialogue, forward_image, forward_personality)), self.combine_layer)
-        combine = forward_dialogue * self.combine_layer[0] + forward_image * self.combine_layer[1] + forward_personality * self.combine_layer[2]
+        if self.combine_type == "sum":
+            combine = forward_dialogue + forward_image + forward_personality
+        else:
+            combine = forward_dialogue * self.combine_layer[0] + forward_image * self.combine_layer[1] + forward_personality * self.combine_layer[2]
         return combine, forward_labels
 
 
