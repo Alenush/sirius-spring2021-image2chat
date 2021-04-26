@@ -5,22 +5,36 @@ from tqdm import tqdm
 from torch.utils.data import Dataset, DataLoader
 from data_loader.image_loader import ImageLoader
 from data_loader.dictionary import Dictionary
+from transformers import BertTokenizer
 
+CLS_TOKEN = '[CLS]'
+SEP_TOKEN = '[SEP]'
+MASK_TOKEN = '[MASK]'
 
 class ImageChatDataset(Dataset):
-    def __init__(self, dialogs_path, images_path, personalities_path, dict_path, split, image_mode, prefix='train.json'):
+    def __init__(self, args, split='train'):
         self.use_cuda = torch.cuda.is_available()
         self.img_loader = ImageLoader({
-            'image_mode': image_mode, #'efficientnet', #'resnext101_32x48d_wsl'
+            'image_mode': args.backbone, #'efficientnet', #'resnext101_32x48d_wsl'
             'image_size': 256,
             'image_cropsize': 224,
             'split': split
         })
-        self.images_path = images_path
-        self._extract_text_and_images(os.path.join(dialogs_path, prefix), images_path, personalities_path)
+        prefix = split + '.json'
+        self.images_path = args.images_path
+        self._ru_model = args.ru_model
+        self._extract_text_and_images(os.path.join(args.dialogues_path, prefix), args.images_path, args.personalities_path)
         self._setup_data()
         self._truncate_len = 32
-        self.dictionary = Dictionary(dict_path)
+        self.dictionary = None
+
+        if args.ru_model:
+            self._build_tokenizer(args.transformer)
+        else:
+            self.dictionary = Dictionary(args.dict_path)
+
+    def _build_tokenizer(self, bert_type):
+        self.tokenizer = BertTokenizer.from_pretrained(bert_type)
 
     def _build_personality_dictionary(self, personalities_list):
         self.personality_to_id = {p: i for i, p in enumerate(personalities_list)}
@@ -87,7 +101,7 @@ class ImageChatDataset(Dataset):
             res = 0
         return res
 
-    def sentences_to_tensor(self, sentences):
+    def sentences_to_tensor_with_dict(self, sentences):
         res_all = []
         masks_all = []
 
@@ -109,6 +123,36 @@ class ImageChatDataset(Dataset):
             res_all.append(res)
             masks_all.append(mask)
         return torch.stack(res_all), torch.stack(masks_all)
+
+    def sentences_to_tensor_with_tokenizer(self, sentences):
+        res_all = []
+        masks_all = []
+        max_length = self._truncate_len
+
+        for sent in sentences:
+            tokens = [CLS_TOKEN] + self.tokenizer.tokenize(sent)
+            if len(tokens) > self._truncate_len:
+                tokens = tokens[:self._truncate_len]
+            res = torch.LongTensor(max_length).fill_(0)
+            mask = torch.LongTensor(max_length).fill_(0)
+            tokens_ids = self.tokenizer.convert_tokens_to_ids(tokens)
+            res[0: len(tokens)] = torch.LongTensor(tokens_ids)
+            mask[0: len(tokens)] = 1
+
+            if self.use_cuda:
+                res = res.cuda()
+                mask = mask.cuda()
+
+            res_all.append(res)
+            masks_all.append(mask)
+        return torch.stack(res_all), torch.stack(masks_all)
+
+
+    def sentences_to_tensor(self, sentences):
+        if self._ru_model:
+            return self.sentences_to_tensor_with_tokenizer(sentences)
+        else:
+            return self.sentences_to_tensor_with_dict(sentences)
 
     def personality_to_tensor(self, personality):
         res = torch.FloatTensor(self.num_personalities).fill_(0)

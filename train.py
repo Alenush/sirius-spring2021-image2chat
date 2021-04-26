@@ -100,26 +100,28 @@ def save_state(model, optimizer, path):
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
-    parser.add_argument('--backbone', default="resnet152", help='type of backbone')
+    parser.add_argument('--backbone', default="resnext101_32x48d_wsl", help='type of backbone')
     parser.add_argument('--use_personality', default=True, type=bool, help='using personality vector')
     parser.add_argument('--combine_type', default="sum", help='type of combine')
-    parser.add_argument('--personalities_num', default=216, type=int, help='number of personalities')
-    
+    parser.add_argument('--num_personalities', default=216, type=int, help='number of personalities')
+
     parser.add_argument('--epochs', default=10, type=int, help='number of epochs')
-    parser.add_argument('--batchsize', default=500, type=int, help='batch size')
-    parser.add_argument('--images_path', default='C://Users//daria.vinogradova//ParlAI//data//yfcc_images', type=str)
-    parser.add_argument('--dialogues_path', default='C://Users//daria.vinogradova//ParlAI//data//image_chat', type=str)
+    parser.add_argument('--batchsize', default=50, type=int, help='batch size')
+    parser.add_argument('--images_path', default='C://Users//miair//Downloads//yfcc_images//yfcc_images', type=str)
+    parser.add_argument('--dialogues_path', default='C://Users//miair//Desktop//Учёба//Сириус//Сириус3//image_chat//ru', type=str)
     parser.add_argument('--dict_path',
-                        default='C://Users//daria.vinogradova//ParlAI//data//models//image_chat//transresnet_multimodal//model.dict',
+                        default='C://Users//miair//Desktop//Учёба//Сириус//Сириус3//image_chat//model.dict',
                         type=str)
     parser.add_argument('--personalities_path',
-                        default='C://Users//daria.vinogradova//ParlAI//data//personality_captions//personalities.json',
+                        default='C://Users//miair//Desktop//Учёба//Сириус//Сириус3//image_chat//personalities.json',
                         type=str)
+
+    parser.add_argument('--transformer', default='DeepPavlov/rubert-base-cased', type=str, help='type of pretrained transformer')
     parser.add_argument('--label_enc',
-                        default='', #C://Users//daria.vinogradova//ParlAI//data//image_chat//label_encoder.pt
+                        default='', #'C://Users//miair//Desktop//ParlAI//data//models//pretrained_transformers//poly_model_huge_reddit//model', #C://Users//daria.vinogradova//ParlAI//data//image_chat//label_encoder.pt
                         type=str)
     parser.add_argument('--context_enc',
-                        default='', #C://Users//daria.vinogradova//ParlAI//data//image_chat//context_encoder.pt
+                        default='', #'C://Users//miair//Desktop//ParlAI//data//models//pretrained_transformers//poly_model_huge_reddit//model', #C://Users//daria.vinogradova//ParlAI//data//image_chat//context_encoder.pt
                         type=str)
 
     parser.add_argument('--valid_after_epoch_fraction', default=0.05, type=float)
@@ -127,42 +129,28 @@ if __name__ == '__main__':
     parser.add_argument('--save_model_every', type=float, default=0.33, help='save model every fraction of epoch')
     parser.add_argument('--save_model_path', default="./model_state_dict")
     parser.add_argument('--early_stopping', type=int, default=5)
+    parser.add_argument('--ru_model', type=bool, default=True)
 
     args = parser.parse_args()
     if args.backbone not in ["resnet152", "resnext101_32x48d_wsl", "efficientnet"]:
         raise ValueError(f"Only resnet, resnext and  efficientnet are supported as a backbone, not {args.backbone}.")
     train_ds = ImageChatDataset(
-        args.dialogues_path,
-        args.images_path,
-        args.personalities_path,
-        args.dict_path,
-        "train",
-        args.backbone
+        args,
+        "train"
     )
-    valid_ds = ImageChatDataset(
-        args.dialogues_path,
-        args.images_path,
-        args.personalities_path,
-        args.dict_path,
-        "valid",
-        args.backbone,
-        'valid.json',
+    """valid_ds = ImageChatDataset(
+        args,
+        "valid"
     )
 
     test_ds = ImageChatDataset(
-        args.dialogues_path,
-        args.images_path,
-        args.personalities_path,
-        args.dict_path,
-        "test",
-        args.backbone,
-        'test.json',
-    )
-
+        args,
+        "test"
+    )"""
 
     train_loader = DataLoader(train_ds, batch_size=args.batchsize, shuffle=True)
-    valid_loader = DataLoader(valid_ds, batch_size=args.batchsize, shuffle=True)
-    test_loader = DataLoader(test_ds, batch_size=args.batchsize, shuffle=True)
+    #valid_loader = DataLoader(valid_ds, batch_size=args.batchsize, shuffle=True)
+    #test_loader = DataLoader(test_ds, batch_size=args.batchsize, shuffle=True)
 
     model = TransresnetMultimodalModel(train_ds.dictionary, args)
     context_encoder_path = args.context_enc
@@ -204,7 +192,7 @@ if __name__ == '__main__':
             if i % args.loss_after_n_batches:
                 print(f'{loss.item()} loss, {ok.item()} right samples from {args.batchsize}')
 
-            if i % valid_after_n_bathes == 0 and i > 0:
+            """if i % valid_after_n_bathes == 0 and i > 0:
                 val_acc1, val_acc5, val_acc10 = compute_metrics(valid_loader)
                 if val_acc1 > best_val_acc:
                     save_state(model, optimizer, args.save_model_path)
@@ -222,7 +210,7 @@ if __name__ == '__main__':
                 print("valid accuracy10: ", val_acc10.item())
 
             if i % int(n_batches * args.save_model_every) == 0 and i != 0:
-                save_state(model, optimizer, args.save_model_path)
+                save_state(model, optimizer, args.save_model_path)"""
         if stopped:
             break
 

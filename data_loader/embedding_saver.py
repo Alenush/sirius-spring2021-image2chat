@@ -1,12 +1,19 @@
+import json
+from tqdm import tqdm
+import argparse
+
 import torch
 import torch.nn as nn
 from PIL import Image
 import sys
 import subprocess
 
-#from model import EfficentNetBackbone
-from .utils import save_tensor
+# from model import EfficentNetBackbone
 import os
+
+def save_tensor(state_dict, path):
+  with open(path, "wb") as f:
+    torch.save(state_dict, f)
 
 IMAGE_MODE_SWITCHER = {
     'resnet152': ['resnet152', -1],
@@ -19,6 +26,7 @@ IMAGE_MODE_SWITCHER = {
     'resnext101_32x32d_wsl': ['resnext101_32x32d_wsl', -1],
     'resnext101_32x48d_wsl': ['resnext101_32x48d_wsl', -1],
 }
+
 
 class ImageLoader:
     """
@@ -56,7 +64,7 @@ class ImageLoader:
 
             self.torchvision = torchvision
             self.transforms = torchvision.transforms
-            #raise ImportError('Please install torchvision; see https://pytorch.org/')
+            # raise ImportError('Please install torchvision; see https://pytorch.org/')
 
         if split == "train":
             self.transform = self.transforms.Compose(
@@ -112,6 +120,7 @@ class ImageLoader:
 
     def _init_efficientnet(self):
         pass
+
     #    self.netCNN = EfficentNetBackbone()
 
     def _image_mode_switcher(self):
@@ -140,7 +149,7 @@ class ImageLoader:
     def _get_prepath(self, path):
         prepath, imagefn = os.path.split(path)
         return prepath, imagefn
-        
+
     def load(self, path):
         """
         Load from a given path.
@@ -159,3 +168,21 @@ class ImageLoader:
         else:
             with open(new_path, 'rb') as f:
                 return torch.load(f)
+
+if __name__ == '__main__':
+    parser = argparse.ArgumentParser()
+    parser.add_argument('--part', default=0, type=int)
+    args = parser.parse_args()
+    img_loader = ImageLoader({
+        'image_mode': 'resnext101_32x48d_wsl',  # 'efficientnet', #'resnext101_32x48d_wsl'
+        'image_size': 256,
+        'image_cropsize': 224,
+        'split': 'train'
+    })
+    images_path = 'C://Users//miair//Downloads//yfcc_images//yfcc_images'
+    with open('C://Users//miair//Desktop//Учёба//Сириус//Сириус3//image_chat//train.json') as f:
+        data = json.load(f)
+        data = data[args.part*50000:min(len(data), (args.part+1)*50000)]
+        for i in tqdm(range(len(data))):
+            elem = data[i]
+            img_loader.load(images_path + '/' + elem['image_hash'] + '.jpg')
