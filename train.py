@@ -138,7 +138,7 @@ if __name__ == '__main__':
         args,
         "train"
     )
-    """valid_ds = ImageChatDataset(
+    valid_ds = ImageChatDataset(
         args,
         "valid"
     )
@@ -146,11 +146,11 @@ if __name__ == '__main__':
     test_ds = ImageChatDataset(
         args,
         "test"
-    )"""
+    )
 
     train_loader = DataLoader(train_ds, batch_size=args.batchsize, shuffle=True)
-    #valid_loader = DataLoader(valid_ds, batch_size=args.batchsize, shuffle=True)
-    #test_loader = DataLoader(test_ds, batch_size=args.batchsize, shuffle=True)
+    valid_loader = DataLoader(valid_ds, batch_size=args.batchsize, shuffle=True)
+    test_loader = DataLoader(test_ds, batch_size=args.batchsize, shuffle=True)
 
     model = TransresnetMultimodalModel(train_ds.dictionary, args)
     context_encoder_path = args.context_enc
@@ -192,7 +192,7 @@ if __name__ == '__main__':
             if i % args.loss_after_n_batches:
                 print(f'{loss.item()} loss, {ok.item()} right samples from {args.batchsize}')
 
-            """if i % valid_after_n_bathes == 0 and i > 0:
+            if i % valid_after_n_bathes == 0 and i > 0:
                 val_acc1, val_acc5, val_acc10 = compute_metrics(valid_loader)
                 if val_acc1 > best_val_acc:
                     save_state(model, optimizer, args.save_model_path)
@@ -210,8 +210,13 @@ if __name__ == '__main__':
                 print("valid accuracy10: ", val_acc10.item())
 
             if i % int(n_batches * args.save_model_every) == 0 and i != 0:
-                save_state(model, optimizer, args.save_model_path)"""
+                save_state(model, optimizer, args.save_model_path)
         if stopped:
             break
 
+    print("metrics on test:")
+    test_acc1, test_acc5, test_acc10 = compute_metrics(test_loader)
+    print("test accuracy1: ", val_acc1.item())
+    print("test accuracy5: ", val_acc5.item())
+    print("test accuracy10: ", val_acc10.item())
     #evaluate(args, model, valid_ds)
