@@ -83,10 +83,10 @@ class TransresnetMultimodalModel(nn.Module):
                 )
             else:
                 return TransformerEncoder(
-                    embedding_size=self.embedding_size,
-                    ffn_size=self.embedding_size * 4,
-                    n_layers=4,
-                    n_heads=6,
+                    opt = Opt({'embedding_size': self.embedding_size,
+                      'ffn_size': self.embedding_size * 4,
+                      'n_layers': 4,
+                      'n_heads': 6}),
                     embedding=embeddings,
                     vocabulary_size=len(self.dictionary),
                     padding_idx=self.dictionary.tok2ind[self.dictionary.null_token],

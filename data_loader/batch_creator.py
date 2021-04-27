@@ -22,6 +22,7 @@ class ImageChatDataset(Dataset):
         })
         prefix = split + '.json'
         self.images_path = args.images_path
+        self.image_mode = args.backbone
         self._ru_model = args.ru_model
         self._extract_text_and_images(os.path.join(args.dialogues_path, prefix), args.images_path, args.personalities_path)
         self._setup_data()
@@ -64,11 +65,11 @@ class ImageChatDataset(Dataset):
             self._build_personality_dictionary(personalities)
 
         self.data = []
-        possible_hashes = set(os.listdir(images_path))
+        possible_hashes = set(os.listdir(images_path + '/' + self.image_mode))
         print("loading data: ")
         for i in tqdm(range(len(raw_data))):
             sample = raw_data[i]
-            if sample['image_hash'] + '.jpg' not in possible_hashes:
+            if sample['image_hash'] not in possible_hashes:
                 continue
             self.data.append(sample)
 
@@ -113,8 +114,8 @@ class ImageChatDataset(Dataset):
 
             res = torch.LongTensor(max_length).fill_(self.dictionary.tok2ind[self.dictionary.null_token])
             res[0: len(vec)] = torch.LongTensor(vec)
-            mask = torch.FloatTensor(max_length).fill_(0)
-            mask[0: len(vec)] = torch.FloatTensor([1] * len(vec))
+            mask = torch.LongTensor(max_length).fill_(0)
+            mask[0: len(vec)] = torch.LongTensor([1] * len(vec))
 
             if self.use_cuda:
                 res = res.cuda()
@@ -130,9 +131,10 @@ class ImageChatDataset(Dataset):
         max_length = self._truncate_len
 
         for sent in sentences:
-            tokens = [CLS_TOKEN] + self.tokenizer.tokenize(sent)
+            tokens = [CLS_TOKEN] + self.tokenizer.tokenize(sent) + [SEP_TOKEN]
             if len(tokens) > self._truncate_len:
                 tokens = tokens[:self._truncate_len]
+                tokens[-1] = SEP_TOKEN
             res = torch.LongTensor(max_length).fill_(0)
             mask = torch.LongTensor(max_length).fill_(0)
             tokens_ids = self.tokenizer.convert_tokens_to_ids(tokens)

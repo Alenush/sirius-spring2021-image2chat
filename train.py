@@ -107,7 +107,7 @@ if __name__ == '__main__':
 
     parser.add_argument('--epochs', default=10, type=int, help='number of epochs')
     parser.add_argument('--batchsize', default=50, type=int, help='batch size')
-    parser.add_argument('--images_path', default='C://Users//miair//Downloads//yfcc_images//yfcc_images', type=str)
+    parser.add_argument('--images_path', default='C://Users//miair//Downloads//yfcc_images//yfcc_images', type=str) #C://Users//miair//Downloads//yfcc_images//yfcc_images
     parser.add_argument('--dialogues_path', default='C://Users//miair//Desktop//Учёба//Сириус//Сириус3//image_chat//ru', type=str)
     parser.add_argument('--dict_path',
                         default='C://Users//miair//Desktop//Учёба//Сириус//Сириус3//image_chat//model.dict',
@@ -129,7 +129,7 @@ if __name__ == '__main__':
     parser.add_argument('--save_model_every', type=float, default=0.33, help='save model every fraction of epoch')
     parser.add_argument('--save_model_path', default="./model_state_dict")
     parser.add_argument('--early_stopping', type=int, default=5)
-    parser.add_argument('--ru_model', type=bool, default=True)
+    parser.add_argument('--ru_model', type=bool, default=False)
 
     args = parser.parse_args()
     if args.backbone not in ["resnet152", "resnext101_32x48d_wsl", "efficientnet"]:

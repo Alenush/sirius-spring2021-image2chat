@@ -23,14 +23,14 @@ class Dictionary():
         return len(self.ind2tok)
 
     def load(self, filename):
-        self.null_token = '<PAD>'
-        self._unk_token = '<UNK>'
+        self.null_token = '[PAD]'
+        self._unk_token = '[UNK]'
         with open(filename, 'r', encoding='utf-8', errors='ignore') as read:
             for line in read:
-                split = line.strip().split('\t')
-                token = unescape(split[0])
-                cnt = int(split[1]) if len(split) > 1 else 0
-                self.freq[token] = cnt
+                #split = line.strip().split('\t')
+                token = unescape(line[:-1])
+                #cnt = int(split[1]) if len(split) > 1 else 0
+                #self.freq[token] = cnt
                 self._add_token(token)
         self._unk_token_idx = self.tok2ind[self._unk_token]
 
