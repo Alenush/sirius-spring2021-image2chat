@@ -101,10 +101,10 @@ if __name__ == '__main__':
 
     texts = []
 
-    with open(args.tr_path, "r", encoding='utf8') as inf:
+    with open(args.tr_path, "rb") as inf:
         trigger = False
         for line in inf.readlines():
-            eng, rus = line.split("%%##########%%")
+            eng, rus = line.decode("cp1251").split("%%##########%%")
             texts.append(rus.strip())
 
     texts = texts[:int(len(texts)*args.dataset_part)]
