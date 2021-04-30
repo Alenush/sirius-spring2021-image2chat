@@ -101,10 +101,9 @@ if __name__ == '__main__':
 
     texts = []
 
-    with open(args.tr_path, "rb") as inf:
+    with open(args.tr_path, "r") as inf:
         trigger = False
         for line in inf.readlines():
-            
             eng, rus = line.split("%%##########%%")
             texts.append(rus.strip())
 
