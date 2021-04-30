@@ -11,10 +11,10 @@ import math
 import argparse
 
 
-def calc_ppl(phrase: str,
-             tokenizer: PreTrainedTokenizer,
-             model: GPT2LMHeadModel,
-             model_name: str) -> float:
+def calc_ppl(phrase,
+             tokenizer,
+             model,
+             model_name):
     if "gpt" in model_name:
         input_ids = torch.tensor([tokenizer(phrase)['input_ids']]).cuda()
         with torch.no_grad():
@@ -94,8 +94,8 @@ def calc_ppl_for_model(model_name):
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
-    parser.add_argument('--tr_path', default="", help='path to translations')
-    parser.add_argument('--model_name', default="", help='name of pretrained language model')
+    parser.add_argument('--tr_path', default="../../../translations.txt", help='path to translations')
+    parser.add_argument('--model_name', default='Geotrend/bert-base-ru-cased', help='name of pretrained language model')
     parser.add_argument('--dataset_part', default=1.0, type=float, help='part of translations to process')
     args = parser.parse_args()
 
@@ -104,7 +104,8 @@ if __name__ == '__main__':
     with open(args.tr_path, "rb") as inf:
         trigger = False
         for line in inf.readlines():
-            eng, rus = line.decode("cp1251").split("%%##########%%")
+            
+            eng, rus = line.split("%%##########%%")
             texts.append(rus.strip())
 
     texts = texts[:int(len(texts)*args.dataset_part)]
