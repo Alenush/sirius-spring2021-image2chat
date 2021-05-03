@@ -42,10 +42,6 @@ class TransresnetMultimodalModel(nn.Module):
         self._build_personality_encoder()
         self._build_label_encoder()
 
-        if self.ru_model:
-            self.ru_model = True
-            self._build_bert_encoder(self.transformer)
-
         self.context_encoder = self._get_context_encoder()
         self.label_encoder = self._get_context_encoder()
         self.combine_layer = torch.empty(3, requires_grad=True)
@@ -67,12 +63,9 @@ class TransresnetMultimodalModel(nn.Module):
         ]
         self.personality_encoder = nn.Sequential(*personality_layers)
 
-    def _build_bert_encoder(self, bert_type):
-        self.encoder = transformers.BertModel.from_pretrained(bert_type)
-
     def _get_context_encoder(self):
         if self.ru_model:
-            return BertWrapper(self.encoder)
+            return BertWrapper(transformers.BertModel.from_pretrained(self.transformer))
         else:
             embeddings = nn.Embedding(len(self.dictionary), self.embedding_size)
             if self.transformer == "reddit_pretrained":
@@ -106,8 +99,8 @@ class TransresnetMultimodalModel(nn.Module):
             forward_personality = self.personality_encoder(personality_ohe)
         else:
             forward_personality = torch.zeros_like(forward_image)
-        forward_dialogue = self.additional_layer(self.context_encoder(d_indexes, d_mask))
-        forward_labels = self.additional_layer(self.label_encoder(l_indexes, l_mask))
+        forward_dialogue = self.additional_layer(self.context_encoder(torch.unsqueeze(d_indexes, 1)))
+        forward_labels = self.additional_layer(self.label_encoder(torch.unsqueeze(l_indexes, 1)))
         if self.combine_type == "sum":
             combine = forward_dialogue + forward_image + forward_personality
         else:
@@ -122,7 +115,7 @@ class LinearWrapper(nn.Module):
         self.dp = nn.Dropout(dropout)
 
     def forward(self, input):
-        return self.lin(self.dp(input))
+        return self.lin(self.dp(torch.squeeze(input[2])))
 
 
 """class EfficentNetBackbone(nn.Module):

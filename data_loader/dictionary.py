@@ -25,6 +25,8 @@ class Dictionary():
     def load(self, filename):
         self.null_token = '[PAD]'
         self._unk_token = '[UNK]'
+        self._add_token(self.null_token)
+        self._add_token(self._unk_token)
         with open(filename, 'r', encoding='utf-8', errors='ignore') as read:
             for line in read:
                 #split = line.strip().split('\t')

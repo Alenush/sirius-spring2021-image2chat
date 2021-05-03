@@ -106,9 +106,9 @@ if __name__ == '__main__':
     parser.add_argument('--num_personalities', default=216, type=int, help='number of personalities')
 
     parser.add_argument('--epochs', default=10, type=int, help='number of epochs')
-    parser.add_argument('--batchsize', default=50, type=int, help='batch size')
+    parser.add_argument('--batchsize', default=5, type=int, help='batch size')
     parser.add_argument('--images_path', default='C://Users//miair//Downloads//yfcc_images//yfcc_images', type=str) #C://Users//miair//Downloads//yfcc_images//yfcc_images
-    parser.add_argument('--dialogues_path', default='C://Users//miair//Desktop//Учёба//Сириус//Сириус3//image_chat//ru', type=str)
+    parser.add_argument('--dialogues_path', default='C://Users//miair//Desktop//Учёба//Сириус//Сириус3//image_chat', type=str)
     parser.add_argument('--dict_path',
                         default='C://Users//miair//Desktop//Учёба//Сириус//Сириус3//image_chat//model.dict',
                         type=str)
@@ -116,7 +116,7 @@ if __name__ == '__main__':
                         default='C://Users//miair//Desktop//Учёба//Сириус//Сириус3//image_chat//personalities.json',
                         type=str)
 
-    parser.add_argument('--transformer', default='DeepPavlov/rubert-base-cased', type=str, help='type of pretrained transformer')
+    parser.add_argument('--transformer', default='reddit_pretrained', type=str, help='type of pretrained transformer')
     parser.add_argument('--label_enc',
                         default='', #'C://Users//miair//Desktop//ParlAI//data//models//pretrained_transformers//poly_model_huge_reddit//model', #C://Users//daria.vinogradova//ParlAI//data//image_chat//label_encoder.pt
                         type=str)
